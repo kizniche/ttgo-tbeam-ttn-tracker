@@ -8,6 +8,6 @@ The sample code is configured to connect to The Things Network using EU frequenc
 
 Arduino Library Dependencies:
 
-[mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
-[mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
-[ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
+ - [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
+ - [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
+ - [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
