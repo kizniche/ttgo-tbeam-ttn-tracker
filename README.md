@@ -1,6 +1,6 @@
 ## The Things Network Mapper-Tracker
 
-## For the TTGO T-Beam development platform
+### For the TTGO T-Beam development platform
 
 #### Based on the code from [xoseperez/ttgo-beam-tracker](https://github.com/xoseperez/ttgo-beam-tracker), with excerpts from [dermatthias/Lora-TTNMapper-T-Beam](https://github.com/dermatthias/Lora-TTNMapper-T-Beam) to fix an issue with incorrect GPS data being transmitted to The Things Network. I aslo added support for the US 915 MHz frequency.
 
