@@ -1,8 +1,6 @@
-## The Things Network Mapper-Tracker
+## TTGO T-Beam Tracker for The Things Network
 
-### For the TTGO T-Beam development platform
-
-#### Based on the code from [xoseperez/ttgo-beam-tracker](https://github.com/xoseperez/ttgo-beam-tracker), with excerpts from [dermatthias/Lora-TTNMapper-T-Beam](https://github.com/dermatthias/Lora-TTNMapper-T-Beam) to fix an issue with incorrect GPS data being transmitted to The Things Network. I also added support for the US 915 MHz frequency.
+#### Based on the code from [xoseperez/ttgo-beam-tracker](https://github.com/xoseperez/ttgo-beam-tracker), with excerpts from [dermatthias/Lora-TTNMapper-T-Beam](https://github.com/dermatthias/Lora-TTNMapper-T-Beam) to fix an issue with incorrect GPS data being transmitted to The Things Network. I also added support for the 915 MHz frequency (North and South America).
 
 This is a LoRaWAN node based on the [TTGO T-Beam](https://github.com/LilyGO/TTGO-T-Beam) development platform using the SSD1306 I2C OLED display.
 It uses a RFM95 by HopeRF and the MCCI LoRaWAN LMIC stack. This sample code is configured to connect to The Things Network using the US 915 MHz frequency by default, but can be changed to EU 868 MHz.
@@ -14,6 +12,8 @@ Arduino Library Dependencies:
  - [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
  - [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
  - [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
+
+#### The TTGO T-Beam development platform
 
 ![TTGO T-Beam 01](img/TTGO-TBeam-01.jpg)
 
