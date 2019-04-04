@@ -51,7 +51,7 @@ void send() {
     #endif
 
     ttn_cnt(count);
-    ttn_send(txBuffer, LORAWAN_PORT, confirmed);
+    ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
 
     count++;
 }
