@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Arduino.h>
 #include <lmic.h>
-
 void ttn_register(void (*callback)(uint8_t message));
 
 // -----------------------------------------------------------------------------
@@ -40,6 +39,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // Configuration
 // -----------------------------------------------------------------------------
 
+#define USE_CAYENNE
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages

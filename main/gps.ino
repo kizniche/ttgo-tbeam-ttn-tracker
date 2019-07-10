@@ -63,29 +63,4 @@ static void gps_loop() {
     }
 }
 
-void buildPacket(uint8_t txBuffer[9])
-{
-  LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
-  LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
-  
-  sprintf(t, "Lat: %f", _gps.location.lat());
-  Serial.println(t);
-  
-  sprintf(t, "Lng: %f", _gps.location.lng());
-  Serial.println(t);
-  
-  txBuffer[0] = ( LatitudeBinary >> 16 ) & 0xFF;
-  txBuffer[1] = ( LatitudeBinary >> 8 ) & 0xFF;
-  txBuffer[2] = LatitudeBinary & 0xFF;
 
-  txBuffer[3] = ( LongitudeBinary >> 16 ) & 0xFF;
-  txBuffer[4] = ( LongitudeBinary >> 8 ) & 0xFF;
-  txBuffer[5] = LongitudeBinary & 0xFF;
-
-  altitudeGps = _gps.altitude.meters();
-  txBuffer[6] = ( altitudeGps >> 8 ) & 0xFF;
-  txBuffer[7] = altitudeGps & 0xFF;
-
-  hdopGps = _gps.hdop.value()/10;
-  txBuffer[8] = hdopGps & 0xFF;
-}

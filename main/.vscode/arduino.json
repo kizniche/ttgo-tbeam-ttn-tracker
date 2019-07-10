@@ -1,0 +1,4 @@
+{
+    "board": "arduino:avr:yun",
+    "sketch": "main.ino"
+}
