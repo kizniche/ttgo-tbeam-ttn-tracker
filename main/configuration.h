@@ -94,6 +94,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #define GPS_RX_PIN      12
 #define GPS_TX_PIN      15
 #define GPS_BAUDRATE    9600
+#define USE_GPS         1
 
 // -----------------------------------------------------------------------------
 // LoRa SPI

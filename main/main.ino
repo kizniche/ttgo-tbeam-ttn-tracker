@@ -25,9 +25,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <rom/rtc.h>
 #include "dataformats.h"
 
+
 // Message counter, stored in RTC memory, survives deep sleep
 RTC_DATA_ATTR uint32_t count = 0;
+// -----------------------------------------------------------------------------
+// Submodules
+// -----------------------------------------------------------------------------
+#ifdef USE_GPS 1
+#include <TinyGPS++.h>
 
+uint32_t LatitudeBinary, LongitudeBinary;
+uint16_t altitudeGps;
+uint8_t hdopGps;
+char t[32]; // used to sprintf for Serial output
+
+TinyGPSPlus _gps;
+HardwareSerial _serial_gps(GPS_SERIAL_NUM);
+
+void gps_time(char * buffer, uint8_t size) {
+    snprintf(buffer, size, "%02d:%02d:%02d", _gps.time.hour(), _gps.time.minute(), _gps.time.second());
+}
+
+float gps_latitude() {
+    return _gps.location.lat();
+}
+
+float gps_longitude() {
+    return _gps.location.lng();
+}
+
+float gps_altitude() {
+    return _gps.altitude.meters();
+}
+
+float gps_hdop() {
+    return _gps.hdop.hdop();
+}
+
+uint8_t gps_sats() {
+    return _gps.satellites.value();
+}
+
+void gps_setup() {
+    _serial_gps.begin(GPS_BAUDRATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+}
+
+static void gps_loop() {
+    while (_serial_gps.available()) {
+        _gps.encode(_serial_gps.read());
+    }
+}
+#endif
 // -----------------------------------------------------------------------------
 // Application
 // -----------------------------------------------------------------------------
