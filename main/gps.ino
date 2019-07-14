@@ -66,20 +66,29 @@ static void gps_loop() {
     // CAYENNE DF
     void buildPacket(uint8_t txBuffer[11])
     {
-        LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
-        LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
-        int32_t Height = _gps.altitude.meters() * 100;
-
         sprintf(t, "Lat: %f", _gps.location.lat());
         Serial.println(t);
         sprintf(t, "Lng: %f", _gps.location.lng());
         Serial.println(t);        
         sprintf(t, "Alt: %f", _gps.altitude.meters());
         Serial.println(t);        
+        int32_t lat = _gps.location.lat() * 10000;
+        int32_t lon = _gps.location.lng() * 10000;
+        int32_t alt = _gps.altitude.meters() * 100;
         
-        txBuffer[2] = ( LatitudeBinary >> 16 ) & 0xFF;
-        txBuffer[3] = ( LatitudeBinary >> 8 ) & 0xFF;
-        txBuffer[4] = LatitudeBinary & 0xFF;
+        txBuffer[2] = lat >> 16;
+        txBuffer[3] = lat >> 8;
+        txBuffer[4] = lat;
+        txBuffer[5] = lon >> 16;
+        txBuffer[6] = lon >> 8;
+        txBuffer[7] = lon;
+        txBuffer[8] = alt >> 16;
+        txBuffer[9] = alt >> 8;
+        txBuffer[10] = alt;
+/*
+        txBuffer[2] = ( LatitudeBinary >> 16 );// & 0xFF;
+        txBuffer[3] = ( LatitudeBinary >> 8 );// & 0xFF;
+        txBuffer[4] = LatitudeBinary;// & 0xFF;
 
         txBuffer[5] = ( LongitudeBinary >> 16 ) & 0xFF;
         txBuffer[6] = ( LongitudeBinary >> 8 ) & 0xFF;
@@ -87,7 +96,7 @@ static void gps_loop() {
 
         txBuffer[8] = Height >> 16;
         txBuffer[9] = Height >> 8;
-        txBuffer[10] = Height;
+        txBuffer[10] = Height;*/
     }    
 #else
 uint8_t txBuffer[9];
