@@ -6,7 +6,8 @@
 // inside the project_config folder.
 
 // Make sure only one of the following is defined (CFG_us915 or CFG_eu868)
-#define CFG_aus915 1
+#define CFG_au915 1
+//#define CFG_au923 1
 //#define CFG_eu868 1
 
 #define CFG_sx1276_radio 1
