@@ -24,7 +24,6 @@
 #include "configuration.h"
 #include "rom/rtc.h"
 
-
 // Message counter, stored in RTC memory, survives deep sleep
 RTC_DATA_ATTR uint32_t count = 0;
 // -----------------------------------------------------------------------------
@@ -32,11 +31,13 @@ RTC_DATA_ATTR uint32_t count = 0;
 // -----------------------------------------------------------------------------
 #include <TinyGPS++.h>
 
-#ifdef USE_CAYENNE
-  // CAYENNE DF
-  static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  
-#else
+#ifdef PAYLOAD_USE_FULL
   uint8_t txBuffer[9];
+#endif
+
+#ifdef PAYLOAD_USE_CAYENNE
+  // CAYENNE DF
+  static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #endif
 
 // -----------------------------------------------------------------------------

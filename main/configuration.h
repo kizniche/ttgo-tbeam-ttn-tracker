@@ -33,13 +33,12 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define APP_NAME                "TTN MAP-TRACK"
-#define APP_VERSION             "1.0.0"
+#define APP_VERSION             "1.1.0"
 
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
 
-#define USE_CAYENNE
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages
@@ -51,6 +50,10 @@ void ttn_register(void (*callback)(uint8_t message));
 #define LORAWAN_SF              DR_SF7      // Spreading factor
 #define LORAWAN_ADR             0           // Enable ADR
 #define GPS_WAIT_FOR_LOCK       5000        // Wait 5s after every boot for GPS lock
+
+// Only enable one
+//#define PAYLOAD_USE_CAYENNE
+#define PAYLOAD_USE_FULL
 
 // -----------------------------------------------------------------------------
 // DEBUG

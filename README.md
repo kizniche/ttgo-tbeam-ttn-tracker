@@ -5,7 +5,7 @@
 This is a LoRaWAN node based on the [TTGO T-Beam](https://github.com/LilyGO/TTGO-T-Beam) development platform using the SSD1306 I2C OLED display.
 It uses a RFM95 by HopeRF and the MCCI LoRaWAN LMIC stack. This sample code is configured to connect to The Things Network using the US 915 MHz frequency by default, but can be changed to EU 868 MHz.
 
-To start, install the dependencies, below. Then edit ```src/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and the Keys/EUIs for your Application's Device from [The Things Network](https://www.thethingsnetwork.org/). Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself). Compile the code and upload it to your TTGO T-Beam. Turn on the device and once a GPS lock is acquired, the device will start sending data.
+To start, install the dependencies and board, below, to your Arduino IDE. Then edit ```src/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from [The Things Network](https://www.thethingsnetwork.org/). Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code, below, if using . Compile the Arduino code and upload it to your TTGO T-Beam. Turn on the device and once a GPS lock is acquired, the device will start sending data.
 
 #### Arduino IDE Board
 
@@ -16,6 +16,35 @@ Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/
  - [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
  - [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
  - [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
+
+#### TTN Decoder
+
+```C
+function Decoder(bytes, port) {
+    var decoded = {};
+
+    decoded.latitude = ((bytes[0]<<16)>>>0) + ((bytes[1]<<8)>>>0) + bytes[2];
+    decoded.latitude = (decoded.latitude / 16777215.0 * 180) - 90;
+  
+    decoded.longitude = ((bytes[3]<<16)>>>0) + ((bytes[4]<<8)>>>0) + bytes[5];
+    decoded.longitude = (decoded.longitude / 16777215.0 * 360) - 180;
+  
+    var altValue = ((bytes[6]<<8)>>>0) + bytes[7];
+    var sign = bytes[6] & (1 << 7);
+    if(sign)
+    {
+        decoded.altitude = 0xFFFF0000 | altValue;
+    }
+    else
+    {
+        decoded.altitude = altValue;
+    }
+  
+    decoded.hdop = bytes[8] / 10.0;
+
+    return decoded;
+}
+```
 
 ### The TTGO T-Beam development platform
 
