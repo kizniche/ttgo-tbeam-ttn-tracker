@@ -155,6 +155,14 @@ void ttn_join() {
             // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
             LMIC_selectSubBand(1);
 
+        #elif defined(CFG_au915)
+            Serial.println("AU_915");
+            // NA-US channels 0-71 are configured automatically
+            // but only one group of 8 should (a subband) should be active
+            // TTN recommends the second sub band, 1 in a zero based count.
+            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+            LMIC_selectSubBand(1);
+
         #endif
 
         // If using a mono-channel gateway disable all channels
@@ -210,6 +218,7 @@ void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
 
     // Prepare upstream data transmission at the next possible time.
     // Parameters are port, data, length, confirmed
+    
     LMIC_setTxData2(port, data, data_size, confirmed ? 1 : 0);
             
     _ttn_callback(EV_QUEUED);

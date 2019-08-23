@@ -62,6 +62,44 @@ static void gps_loop() {
         _gps.encode(_serial_gps.read());
     }
 }
+#ifdef USE_CAYENNE
+    // CAYENNE DF
+    void buildPacket(uint8_t txBuffer[11])
+    {
+        sprintf(t, "Lat: %f", _gps.location.lat());
+        Serial.println(t);
+        sprintf(t, "Lng: %f", _gps.location.lng());
+        Serial.println(t);        
+        sprintf(t, "Alt: %f", _gps.altitude.meters());
+        Serial.println(t);        
+        int32_t lat = _gps.location.lat() * 10000;
+        int32_t lon = _gps.location.lng() * 10000;
+        int32_t alt = _gps.altitude.meters() * 100;
+        
+        txBuffer[2] = lat >> 16;
+        txBuffer[3] = lat >> 8;
+        txBuffer[4] = lat;
+        txBuffer[5] = lon >> 16;
+        txBuffer[6] = lon >> 8;
+        txBuffer[7] = lon;
+        txBuffer[8] = alt >> 16;
+        txBuffer[9] = alt >> 8;
+        txBuffer[10] = alt;
+/*
+        txBuffer[2] = ( LatitudeBinary >> 16 );// & 0xFF;
+        txBuffer[3] = ( LatitudeBinary >> 8 );// & 0xFF;
+        txBuffer[4] = LatitudeBinary;// & 0xFF;
+
+        txBuffer[5] = ( LongitudeBinary >> 16 ) & 0xFF;
+        txBuffer[6] = ( LongitudeBinary >> 8 ) & 0xFF;
+        txBuffer[7] = LongitudeBinary & 0xFF;
+
+        txBuffer[8] = Height >> 16;
+        txBuffer[9] = Height >> 8;
+        txBuffer[10] = Height;*/
+    }    
+#else
+uint8_t txBuffer[9];
 
 void buildPacket(uint8_t txBuffer[9])
 {
@@ -89,3 +127,5 @@ void buildPacket(uint8_t txBuffer[9])
   hdopGps = _gps.hdop.value()/10;
   txBuffer[8] = hdopGps & 0xFF;
 }
+
+#endif
