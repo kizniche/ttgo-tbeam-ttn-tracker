@@ -52,8 +52,18 @@ function Decoder(bytes, port) {
 
 ### The TTGO T-Beam development platform
 
+Note: There are now two versions, the first version (Rev0) and a newer version (Rev1). The GPS module on Rev1 is connected to different pins than Rev0. This code has been successfully tested on REV0, and is in the process of being tested on REV1.
+
+### Rev0
+
 ![TTGO T-Beam 01](img/TTGO-TBeam-01.jpg)
 
 ![TTGO T-Beam 02](img/TTGO-TBeam-02.jpg)
 
 ![TTGO T-Beam 03](img/TTGO-TBeam-03.jpg)
+
+### Rev1
+
+![T-BEAM-Rev1-01](img/T-BEAM-Rev1-01.jpg)
+
+![T-BEAM-Rev1-02](img/T-BEAM-Rev1-02.jpg)
