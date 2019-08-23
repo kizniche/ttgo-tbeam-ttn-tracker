@@ -63,9 +63,10 @@ static void gps_loop() {
     }
 }
 
-#ifdef PAYLOAD_USE_FULL
+#if defined(PAYLOAD_USE_FULL)
+
     // More data than PAYLOAD_USE_CAYENNE
-    void buildPacket(uint8_t txBuffer[9])
+    void buildPacket(uint8_t txBuffer[10])
     {
         LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
         LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
@@ -83,12 +84,14 @@ static void gps_loop() {
         altitudeGps = _gps.altitude.meters();
         txBuffer[6] = ( altitudeGps >> 8 ) & 0xFF;
         txBuffer[7] = altitudeGps & 0xFF;
-        hdopGps = _gps.hdop.value()/10;
+        hdopGps = _gps.hdop.value() / 10;
         txBuffer[8] = hdopGps & 0xFF;
+        sats = _gps.satellites.value() / 10;
+        txBuffer[9] = sats & 0xFF;
     }
-#endif
 
-#ifdef PAYLOAD_USE_CAYENNE
+#elif defined(PAYLOAD_USE_CAYENNE)
+
     // CAYENNE DF
     void buildPacket(uint8_t txBuffer[11])
     {
@@ -112,4 +115,5 @@ static void gps_loop() {
         txBuffer[9] = alt >> 8;
         txBuffer[10] = alt;
     }
+
 #endif

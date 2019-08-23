@@ -39,6 +39,14 @@ void ttn_register(void (*callback)(uint8_t message));
 // Configuration
 // -----------------------------------------------------------------------------
 
+// Select which T-Beam board is being used. Only uncomment one.
+#define T_BEAM_V07  // AKA Rev0 (first board released)
+// #define T_BEAM_V10  // AKA Rev1 (second board released)
+
+// Select the payload format. Change on TTN as well. Only uncomment one.
+#define PAYLOAD_USE_FULL
+//#define PAYLOAD_USE_CAYENNE
+
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages
@@ -50,10 +58,6 @@ void ttn_register(void (*callback)(uint8_t message));
 #define LORAWAN_SF              DR_SF7      // Spreading factor
 #define LORAWAN_ADR             0           // Enable ADR
 #define GPS_WAIT_FOR_LOCK       5000        // Wait 5s after every boot for GPS lock
-
-// Only enable one payload format. Change on TTN as well.
-#define PAYLOAD_USE_FULL
-//#define PAYLOAD_USE_CAYENNE
 
 // -----------------------------------------------------------------------------
 // DEBUG
@@ -94,10 +98,16 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define GPS_SERIAL_NUM  1
-#define GPS_RX_PIN      12
-#define GPS_TX_PIN      15
 #define GPS_BAUDRATE    9600
 #define USE_GPS         1
+
+#if defined(T_BEAM_V07)
+#define GPS_RX_PIN 12
+#define GPS_TX_PIN 15
+#elif defined(T_BEAM_V10)
+#define GPS_RX_PIN 34
+#define GPS_TX_PIN 12
+#endif
 
 // -----------------------------------------------------------------------------
 // LoRa SPI
@@ -111,3 +121,12 @@ void ttn_register(void (*callback)(uint8_t message));
 #define DIO0_GPIO       26
 #define DIO1_GPIO       33
 #define DIO2_GPIO       32
+
+// -----------------------------------------------------------------------------
+// Rev1-specific options
+// -----------------------------------------------------------------------------
+
+#if defined(T_BEAM_V10)
+#define GPS_POWER_CTRL_CH  3
+#define LORA_POWER_CTRL_CH 2
+#endif
