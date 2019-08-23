@@ -9,7 +9,7 @@ To start, install the dependencies, below. Then edit ```src/credentials.h``` to 
 
 #### Arduino IDE Board
 
-Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) and use board 'Heltec_WIFI_LoRa_32'.
 
 #### Arduino IDE Library Dependencies
 
