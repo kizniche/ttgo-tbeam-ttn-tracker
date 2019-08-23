@@ -51,9 +51,9 @@ void ttn_register(void (*callback)(uint8_t message));
 #define LORAWAN_ADR             0           // Enable ADR
 #define GPS_WAIT_FOR_LOCK       5000        // Wait 5s after every boot for GPS lock
 
-// Only enable one
-//#define PAYLOAD_USE_CAYENNE
+// Only enable one payload format. Change on TTN as well.
 #define PAYLOAD_USE_FULL
+//#define PAYLOAD_USE_CAYENNE
 
 // -----------------------------------------------------------------------------
 // DEBUG
