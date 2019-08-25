@@ -21,7 +21,7 @@
 
 #include <TinyGPS++.h>
 
-uint32_t LatitudeBinary
+uint32_t LatitudeBinary;
 uint32_t LongitudeBinary;
 uint16_t altitudeGps;
 uint8_t hdopGps;
