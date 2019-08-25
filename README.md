@@ -9,7 +9,7 @@ It uses a RFM95 by HopeRF and the MCCI LoRaWAN LMIC stack. This sample code is c
 
 NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and a newer version (Rev1). The GPS module on Rev1 is connected to different pins than Rev0. This code has been successfully tested on REV0, and is in the process of being tested on REV1. See the end of this README for photos of eah board.
 
-#### Setup
+### Setup
 
 1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'Heltec_WIFI_LoRa_32'.
 
@@ -56,9 +56,9 @@ function Decoder(bytes, port) {
 I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time) that can be displayed on your phone, tablet, or computer. This is handy for testing signal range while driving, as you can see location points appearing under your moving location dot on the map (if you grant location sharing permissions to the web app) when a successful transmission has been achieved.
 
 
-#### T-BEAM Board Versions
+### T-BEAM Board Versions
 
-### Rev0
+#### Rev0
 
 ![TTGO T-Beam 01](img/TTGO-TBeam-01.jpg)
 
@@ -66,7 +66,7 @@ I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/k
 
 ![TTGO T-Beam 03](img/TTGO-TBeam-03.jpg)
 
-### Rev1
+#### Rev1
 
 ![T-BEAM-Rev1-01](img/T-BEAM-Rev1-01.jpg)
 
