@@ -24,6 +24,10 @@
 #include "configuration.h"
 #include "rom/rtc.h"
 
+#ifdef T_BEAM_V10
+#include "axp20x.h"
+#endif
+
 // Message counter, stored in RTC memory, survives deep sleep
 RTC_DATA_ATTR uint32_t count = 0;
 // -----------------------------------------------------------------------------
