@@ -7,21 +7,23 @@ Uploads GPS data from the TTGO T-Beam to [The Things Network](https://www.thethi
 This is a LoRaWAN node based on the [TTGO T-Beam](https://github.com/LilyGO/TTGO-T-Beam) development platform using the SSD1306 I2C OLED display.
 It uses a RFM95 by HopeRF and the MCCI LoRaWAN LMIC stack. This sample code is configured to connect to The Things Network using the US 915 MHz frequency by default, but can be changed to EU 868 MHz.
 
-To start, install the dependencies and board, below, to your Arduino IDE. Then edit ```src/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code, below. Compile the Arduino code and upload it to your TTGO T-Beam. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTn Mapper.
+NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and a newer version (Rev1). The GPS module on Rev1 is connected to different pins than Rev0. This code has been successfully tested on REV0, and is in the process of being tested on REV1. See the end of this README for photos of eah board.
 
-I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time).
+#### Setup
 
-#### Arduino IDE Board
+1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'Heltec_WIFI_LoRa_32'.
 
-Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) and use board 'Heltec_WIFI_LoRa_32'.
+2. Install the Arduino IDE libraries:
 
-#### Arduino IDE Library Dependencies
+   * [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
+   * [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
+   * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
 
- - [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
- - [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
- - [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
+3. Edit arduino-lmic/project_config/lmic_project_config.h and uncomment the proper frequency for your region.
 
-#### TTN Payload Decoder
+4. Edit ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+
+5. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code:
 
 ```C
 function Decoder(bytes, port) {
@@ -45,9 +47,9 @@ function Decoder(bytes, port) {
 }
 ```
 
-### The TTGO T-Beam development platform
+Compile the Arduino code and upload it to your TTGO T-Beam. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
 
-Note: There are now two versions, the first version (Rev0) and a newer version (Rev1). The GPS module on Rev1 is connected to different pins than Rev0. This code has been successfully tested on REV0, and is in the process of being tested on REV1.
+I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time).
 
 ### Rev0
 

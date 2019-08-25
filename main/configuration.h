@@ -126,7 +126,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // Rev1-specific options
 // -----------------------------------------------------------------------------
 
-#if defined(T_BEAM_V10)
+#ifdef T_BEAM_V10
 #define GPS_POWER_CTRL_CH  3
 #define LORA_POWER_CTRL_CH 2
 #endif
