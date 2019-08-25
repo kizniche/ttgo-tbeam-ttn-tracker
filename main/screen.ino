@@ -103,6 +103,23 @@ void screen_setup() {
 }
 
 void screen_loop() {
+    #ifdef T_BEAM_V10
+    if (axp192_found && pmu_irq) {
+        pmu_irq = false;
+        axp.readIRQ();
+        if (axp.isChargingIRQ()) {
+            baChStatus = "Charging";
+        } else {
+            baChStatus = "No Charging";
+        }
+        if (axp.isVbusRemoveIRQ()) {
+            baChStatus = "No Charging";
+        }
+        digitalWrite(2, !digitalRead(2));
+        axp.clearIRQ();
+    }
+    #endif
+
     display->clear();
     _screen_header();
     display->drawLogBuffer(0, SCREEN_HEADER_HEIGHT);

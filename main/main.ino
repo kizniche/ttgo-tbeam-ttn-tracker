@@ -26,6 +26,11 @@
 
 #ifdef T_BEAM_V10
 #include "axp20x.h"
+#define AXP192_SLAVE_ADDRESS    0x34
+AXP20X_Class axp;
+bool axp192_found = false;
+bool pmu_irq = false;
+String baChStatus = "No charging";
 #endif
 
 // Message counter, stored in RTC memory, survives deep sleep
@@ -184,8 +189,6 @@ void setup() {
   } else {
       Serial.println("AXP192 not found");
   }
-
-  Serial1.begin(GPS_BANUD_RATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
   #endif
 
   // Buttons & LED
