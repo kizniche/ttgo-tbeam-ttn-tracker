@@ -15,10 +15,10 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
 
 2. Install the Arduino IDE libraries:
 
-   * [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic)
-   * [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
-   * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
-   * Rev1 will also require [lewisxhe/AXP202X_Library](https://github.com/lewisxhe/AXP202X_Library)
+   * [mcci-catena/arduino-lmic](https://github.com/mcci-catena/arduino-lmic) (for Rev0 and Rev1)
+   * [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus) (for Rev0 and Rev1)
+   * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306) (for Rev0 and Rev1)
+   * [lewisxhe/AXP202X_Library](https://github.com/lewisxhe/AXP202X_Library) (for Rev1 only)
 
 3. Edit the library file ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
