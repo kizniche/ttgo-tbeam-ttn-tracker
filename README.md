@@ -47,9 +47,11 @@ function Decoder(bytes, port) {
 }
 ```
 
-Compile the Arduino code and upload it to your TTGO T-Beam. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+6. Compile the Arduino code and upload it to your TTGO T-Beam.
 
-I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time).
+7. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+
+I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time) that can be displayed on your phone, tablet, or computer. This is handy for testing signal range while driving, as you can see location points appearing under your moving location dot on the map (if you grant location sharing permissions to the web app) when a successful transmission has been achieved.
 
 ### Rev0
 
