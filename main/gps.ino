@@ -21,9 +21,11 @@
 
 #include <TinyGPS++.h>
 
-uint32_t LatitudeBinary, LongitudeBinary;
+uint32_t LatitudeBinary
+uint32_t LongitudeBinary;
 uint16_t altitudeGps;
 uint8_t hdopGps;
+uint8_t sats;
 char t[32]; // used to sprintf for Serial output
 
 TinyGPSPlus _gps;
