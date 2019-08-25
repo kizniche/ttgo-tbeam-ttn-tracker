@@ -19,11 +19,13 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
    * [mikalhart/TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
    * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306)
 
-3. Edit arduino-lmic/project_config/lmic_project_config.h and uncomment the proper frequency for your region.
+3. Edit ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
-4. Edit ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+4. Edit ```main/configuration.h``` and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
 
-5. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code:
+5. Edit ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+
+6. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code:
 
 ```C
 function Decoder(bytes, port) {
@@ -47,11 +49,14 @@ function Decoder(bytes, port) {
 }
 ```
 
-6. Compile the Arduino code and upload it to your TTGO T-Beam.
+7. Compile the Arduino code and upload it to your TTGO T-Beam.
 
-7. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+8. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
 
 I also developed The [Things Network Tracker (TTN-Tracker)](https://github.com/kizniche/ttn-tracker), a web app that pulls GPS data from TTN and displays it on a map in real-time (TTN Mapper is not real-time) that can be displayed on your phone, tablet, or computer. This is handy for testing signal range while driving, as you can see location points appearing under your moving location dot on the map (if you grant location sharing permissions to the web app) when a successful transmission has been achieved.
+
+
+#### T-BEAM Board Versions
 
 ### Rev0
 
