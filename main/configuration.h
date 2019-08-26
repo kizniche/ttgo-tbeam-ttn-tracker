@@ -1,6 +1,6 @@
 /*
 
-TTGO-BEAM based TTN Tracker
+TTGO T-BEAM Tracker for The Things Network
 
 Copyright (C) 2018 by Xose Pérez <xose dot perez at gmail dot com>
 
