@@ -82,16 +82,21 @@ void ttn_register(void (*callback)(uint8_t message));
 // General
 // -----------------------------------------------------------------------------
 
-#define BUTTON_PIN      39
+#define I2C_SDA         21
+#define I2C_SCL         22
 #define LED_PIN         14
+
+#if defined(T_BEAM_V07)
+#define BUTTON_PIN      39
+#elif defined(T_BEAM_V10)
+#define BUTTON_PIN      38
+#endif
 
 // -----------------------------------------------------------------------------
 // OLED
 // -----------------------------------------------------------------------------
 
 #define OLED_ADDRESS    0x3C
-#define OLED_SDA        21
-#define OLED_SCL        22
 
 // -----------------------------------------------------------------------------
 // GPS
@@ -123,11 +128,10 @@ void ttn_register(void (*callback)(uint8_t message));
 #define DIO2_GPIO       32
 
 // -----------------------------------------------------------------------------
-// Rev1-specific options
+// AXP192 (Rev1-specific options)
 // -----------------------------------------------------------------------------
 
-#ifdef T_BEAM_V10
-#define GPS_POWER_CTRL_CH  3
-#define LORA_POWER_CTRL_CH 2
-#define PMU_IRQ            35
-#endif
+#define AXP192_SLAVE_ADDRESS  0x34
+#define GPS_POWER_CTRL_CH     3
+#define LORA_POWER_CTRL_CH    2
+#define PMU_IRQ               35

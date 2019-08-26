@@ -23,10 +23,11 @@
 
 #include "configuration.h"
 #include "rom/rtc.h"
+#include <TinyGPS++.h>
+#include <Wire.h>
 
 #ifdef T_BEAM_V10
 #include "axp20x.h"
-#define AXP192_SLAVE_ADDRESS    0x34
 AXP20X_Class axp;
 bool axp192_found = false;
 bool pmu_irq = false;
@@ -35,10 +36,6 @@ String baChStatus = "No charging";
 
 // Message counter, stored in RTC memory, survives deep sleep
 RTC_DATA_ATTR uint32_t count = 0;
-// -----------------------------------------------------------------------------
-// Submodules
-// -----------------------------------------------------------------------------
-#include <TinyGPS++.h>
 
 #if defined(PAYLOAD_USE_FULL)
   // includes number of satellites and accuracy
@@ -144,7 +141,8 @@ void setup() {
   #endif
 
   #ifdef T_BEAM_V10
-  axp192_found = 1;
+  Wire.begin(I2C_SDA, I2C_SCL);
+  axp192_found = true;
   if (axp192_found) {
       if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
           Serial.println("AXP192 Begin PASS");
