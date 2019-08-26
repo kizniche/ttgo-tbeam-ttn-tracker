@@ -45,7 +45,7 @@ void ttn_register(void (*callback)(uint8_t message));
 
 // Select the payload format. Change on TTN as well. Only uncomment one.
 #define PAYLOAD_USE_FULL
-//#define PAYLOAD_USE_CAYENNE
+// #define PAYLOAD_USE_CAYENNE
 
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
@@ -96,7 +96,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // OLED
 // -----------------------------------------------------------------------------
 
-#define OLED_ADDRESS    0x3C
+#define SSD1306_ADDRESS 0x3C
 
 // -----------------------------------------------------------------------------
 // GPS
@@ -107,11 +107,11 @@ void ttn_register(void (*callback)(uint8_t message));
 #define USE_GPS         1
 
 #if defined(T_BEAM_V07)
-#define GPS_RX_PIN 12
-#define GPS_TX_PIN 15
+#define GPS_RX_PIN      12
+#define GPS_TX_PIN      15
 #elif defined(T_BEAM_V10)
-#define GPS_RX_PIN 34
-#define GPS_TX_PIN 12
+#define GPS_RX_PIN      34
+#define GPS_TX_PIN      12
 #endif
 
 // -----------------------------------------------------------------------------

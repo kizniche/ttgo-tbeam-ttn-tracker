@@ -29,6 +29,7 @@
 #ifdef T_BEAM_V10
 #include "axp20x.h"
 AXP20X_Class axp;
+bool ssd1306_found = false;
 bool axp192_found = false;
 bool pmu_irq = false;
 String baChStatus = "No charging";
@@ -134,14 +135,53 @@ uint32_t get_count() {
   return count;
 }
 
+void scanI2Cdevice(void)
+{
+    byte err, addr;
+    int nDevices = 0;
+    for (addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        err = Wire.endTransmission();
+        if (err == 0) {
+            Serial.print("I2C device found at address 0x");
+            if (addr < 16)
+                Serial.print("0");
+            Serial.print(addr, HEX);
+            Serial.println(" !");
+            nDevices++;
+
+            if (addr == SSD1306_ADDRESS) {
+                ssd1306_found = true;
+                Serial.println("ssd1306 display found");
+            }
+            if (addr == AXP192_SLAVE_ADDRESS) {
+                axp192_found = true;
+                Serial.println("axp192 PMU found");
+            }
+        } else if (err == 4) {
+            Serial.print("Unknow error at address 0x");
+            if (addr < 16)
+                Serial.print("0");
+            Serial.println(addr, HEX);
+        }
+    }
+    if (nDevices == 0)
+        Serial.println("No I2C devices found\n");
+    else
+        Serial.println("done\n");
+}
+
 void setup() {
   // Debug
   #ifdef DEBUG_PORT
   DEBUG_PORT.begin(SERIAL_BAUD);
   #endif
 
+  delay(1000);
+
   #ifdef T_BEAM_V10
   Wire.begin(I2C_SDA, I2C_SCL);
+  scanI2Cdevice();
   axp192_found = true;
   if (axp192_found) {
       if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {

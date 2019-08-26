@@ -93,7 +93,7 @@ void screen_update() {
 
 void screen_setup() {
     // Display instance
-    display = new SSD1306Wire(OLED_ADDRESS, I2C_SDA, I2C_SCL);
+    display = new SSD1306Wire(SSD1306_ADDRESS, I2C_SDA, I2C_SCL);
     display->init();
     display->flipScreenVertically();
     display->setFont(Custom_ArialMT_Plain_10);
