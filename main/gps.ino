@@ -88,7 +88,7 @@ static void gps_loop() {
         txBuffer[7] = altitudeGps & 0xFF;
         hdopGps = _gps.hdop.value() / 10;
         txBuffer[8] = hdopGps & 0xFF;
-        sats = _gps.satellites.value() / 10;
+        sats = _gps.satellites.value();
         txBuffer[9] = sats & 0xFF;
     }
 
