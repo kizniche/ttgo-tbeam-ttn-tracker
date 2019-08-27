@@ -22,11 +22,13 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
 
 3. Edit the library file ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
-4. Edit this project file ```main/configuration.h``` and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
+4. Edit the project file ```main/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
-5. Edit this project file ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+5. Edit this project file ```main/configuration.h``` and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
 
-6. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself or use [TTN Tracker](#ttn-tracker), then add the Decoder code:
+6. Edit this project file ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+
+7. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself or use [TTN Tracker](#ttn-tracker), then add the Decoder code:
 
 ```C
 function Decoder(bytes, port) {
@@ -50,9 +52,9 @@ function Decoder(bytes, port) {
 }
 ```
 
-7. Open this project file ```main/main.ino``` with the Arduino IDE and upload it to your TTGO T-Beam.
+8. Open this project file ```main/main.ino``` with the Arduino IDE and upload it to your TTGO T-Beam.
 
-8. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+9. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
 
 
 ### TTN Tracker
