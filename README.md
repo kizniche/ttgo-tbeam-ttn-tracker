@@ -11,7 +11,7 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
 
 ### Setup
 
-1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'Heltec_WIFI_LoRa_32'.
+1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'T-Beam'.
 
 2. Install the Arduino IDE libraries:
 
