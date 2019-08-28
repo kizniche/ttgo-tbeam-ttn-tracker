@@ -73,11 +73,13 @@ void forceTxSingleChannelDr() {
     // Disables all channels, except for the one defined by SINGLE_CHANNEL_GATEWAY
     // This only affects uplinks; for downlinks the default
     // channels or the configuration from the OTAA Join Accept are used.
+    #ifdef SINGLE_CHANNEL_GATEWAY
     for(int i=0; i<9; i++) { // For EU; for US use i<71
         if(i != SINGLE_CHANNEL_GATEWAY) {
             LMIC_disableChannel(i);
         }
     }
+    #endif
 
     // Set data rate (SF) and transmit power for uplink
     LMIC_setDrTxpow(LORAWAN_SF, 14);
