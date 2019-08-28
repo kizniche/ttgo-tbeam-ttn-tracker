@@ -116,6 +116,7 @@ bool ttn_setup() {
 void ttn_join() {
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
+    LMIC_setClockError(MAX_CLOCK_ERROR * 5 / 100);
 
     #ifdef USE_ABP
 
