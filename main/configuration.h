@@ -47,6 +47,9 @@ void ttn_register(void (*callback)(uint8_t message));
 #define PAYLOAD_USE_FULL
 // #define PAYLOAD_USE_CAYENNE
 
+// If using a single-channel gateway, uncomment this next option and set to your gateway's channel
+//#define SINGLE_CHANNEL_GATEWAY  0
+
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages

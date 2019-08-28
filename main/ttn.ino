@@ -69,18 +69,43 @@ void _ttn_callback(uint8_t message) {
     }
 }
 
+void forceTxSingleChannelDr() {
+    // Disables all channels, except for the one defined by SINGLE_CHANNEL_GATEWAY
+    // This only affects uplinks; for downlinks the default
+    // channels or the configuration from the OTAA Join Accept are used.
+    for(int i=0; i<9; i++) { // For EU; for US use i<71
+        if(i != SINGLE_CHANNEL_GATEWAY) {
+            LMIC_disableChannel(i);
+        }
+    }
+
+    // Set data rate (SF) and transmit power for uplink
+    LMIC_setDrTxpow(LORAWAN_SF, 14);
+}
+
 // LMIC library will call this method when an event is fired
 void onEvent(ev_t event) {
-    if (EV_TXCOMPLETE == event) {
-
+    switch(event) {
+    case EV_JOINED:
+        #ifdef SINGLE_CHANNEL_GATEWAY
+        forceTxSingleChannelDr();
+        #endif
+        break;
+    case EV_TXCOMPLETE:
+        Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
         if (LMIC.txrxFlags & TXRX_ACK) {
+            Serial.println(F("Received ack"));
             _ttn_callback(EV_ACK);
         }
-
         if (LMIC.dataLen) {
+            Serial.print(F("Data Received: "));
+            Serial.write(LMIC.frame+LMIC.dataBeg, LMIC.dataLen);
+            Serial.println();
             _ttn_callback(EV_RESPONSE);
         }
-
+        break;
+    default:
+        break;
     }
 
     // Send message callbacks
@@ -118,7 +143,7 @@ void ttn_join() {
     LMIC_reset();
     LMIC_setClockError(MAX_CLOCK_ERROR * 5 / 100);
 
-    #ifdef USE_ABP
+    #if defined(USE_ABP)
 
         // Set static session parameters. Instead of dynamically establishing a session
         // by joining the network, precomputed session parameters are be provided.
@@ -156,14 +181,6 @@ void ttn_join() {
             // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
             LMIC_selectSubBand(1);
 
-        #elif defined(CFG_au915)
-            Serial.println("AU_915");
-            // NA-US channels 0-71 are configured automatically
-            // but only one group of 8 should (a subband) should be active
-            // TTN recommends the second sub band, 1 in a zero based count.
-            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
-            LMIC_selectSubBand(1);
-
         #endif
 
         // If using a mono-channel gateway disable all channels
@@ -189,13 +206,32 @@ void ttn_join() {
         // TTN uses SF9 for its RX2 window.
         LMIC.dn2Dr = DR_SF9;
 
+        #ifdef SINGLE_CHANNEL_GATEWAY
+        forceTxSingleChannelDr();
+        #else
         // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
         LMIC_setDrTxpow(DR_SF7, 14);
+        #endif
 
         // Trigger a false joined
         _ttn_callback(EV_JOINED);
 
-    #endif // USE_ABP
+    #elif defined(USE_OTAA)
+
+      #ifdef SINGLE_CHANNEL_GATEWAY
+      // Make LMiC initialize the default channels, choose a channel, and
+      // schedule the OTAA join
+      LMIC_startJoining();
+
+      // LMiC will already have decided to send on one of the 3 default
+      // channels; ensure it uses the one we want
+      LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
+
+      // ...and make sure we see the EV_JOINING event being logged
+      os_runloop_once();
+      #endif
+
+    #endif
 }
 
 void ttn_sf(unsigned char sf) {
