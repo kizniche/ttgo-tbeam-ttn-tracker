@@ -82,7 +82,7 @@ void forceTxSingleChannelDr() {
     #endif
 
     // Set data rate (SF) and transmit power for uplink
-    LMIC_setDrTxpow(LORAWAN_SF, 14);
+    ttn_sf(LORAWAN_SF);
 }
 
 // LMIC library will call this method when an event is fired
@@ -188,18 +188,6 @@ void ttn_join() {
 
         #endif
 
-        // If using a mono-channel gateway disable all channels
-        // but the one the gateway is listening to
-        //LMIC_disableChannel(0);
-        //LMIC_disableChannel(1);
-        //LMIC_disableChannel(2);
-        //LMIC_disableChannel(3);
-        //LMIC_disableChannel(4);
-        //LMIC_disableChannel(5);
-        //LMIC_disableChannel(6);
-        //LMIC_disableChannel(7);
-        //LMIC_disableChannel(8);
-
         // TTN defines an additional channel at 869.525Mhz using SF9 for class B
         // devices' ping slots. LMIC does not have an easy way to define set this
         // frequency and support for class B is spotty and untested, so this
@@ -215,7 +203,7 @@ void ttn_join() {
         forceTxSingleChannelDr();
         #else
         // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-        LMIC_setDrTxpow(DR_SF7, 14);
+        ttn_sf(LORAWAN_SF);
         #endif
 
         // Trigger a false joined
@@ -231,9 +219,6 @@ void ttn_join() {
       // LMiC will already have decided to send on one of the 3 default
       // channels; ensure it uses the one we want
       LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
-
-      // ...and make sure we see the EV_JOINING event being logged
-      os_runloop_once();
       #endif
 
     #endif
@@ -260,9 +245,8 @@ void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
 
     // Prepare upstream data transmission at the next possible time.
     // Parameters are port, data, length, confirmed
-    
     LMIC_setTxData2(port, data, data_size, confirmed ? 1 : 0);
-            
+
     _ttn_callback(EV_QUEUED);
 }
 
