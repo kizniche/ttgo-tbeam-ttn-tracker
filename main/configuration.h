@@ -50,6 +50,10 @@ void ttn_register(void (*callback)(uint8_t message));
 // If using a single-channel gateway, uncomment this next option and set to your gateway's channel
 //#define SINGLE_CHANNEL_GATEWAY  0
 
+// If you are having difficulty sending messages to TTN after the first successful send,
+// uncomment the next option and experiment with values (~ 1 - 5)
+//#define CLOCK_ERROR             5
+
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages
