@@ -230,9 +230,10 @@ void ttn_sf(unsigned char sf) {
 
 void ttn_adr(bool enabled) {
     LMIC_setAdrMode(enabled);
+    LMIC_setLinkCheckMode(!enabled);
 }
 
-void ttn_cnt(unsigned char num) {
+void ttn_cnt(uint32_t num) {
     LMIC_setSeqnoUp(num);
 }
 
