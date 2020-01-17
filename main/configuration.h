@@ -142,7 +142,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // AXP192 (Rev1-specific options)
 // -----------------------------------------------------------------------------
 
-#define AXP192_SLAVE_ADDRESS  0x34
+// #define AXP192_SLAVE_ADDRESS  0x34 // Now defined in axp20x.h
 #define GPS_POWER_CTRL_CH     3
 #define LORA_POWER_CTRL_CH    2
 #define PMU_IRQ               35
