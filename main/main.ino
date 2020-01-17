@@ -51,6 +51,8 @@ RTC_DATA_ATTR uint32_t count = 0;
 // Application
 // -----------------------------------------------------------------------------
 
+void buildPacket(uint8_t txBuffer[]); // needed for platformio
+
 void send() {
   char buffer[40];
   snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
