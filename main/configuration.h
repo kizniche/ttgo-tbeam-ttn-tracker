@@ -40,8 +40,8 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 // Select which T-Beam board is being used. Only uncomment one.
-#define T_BEAM_V07  // AKA Rev0 (first board released)
-// #define T_BEAM_V10  // AKA Rev1 (second board released)
+// #define T_BEAM_V07  // AKA Rev0 (first board released)
+#define T_BEAM_V10  // AKA Rev1 (second board released)
 
 // Select the payload format. Change on TTN as well. Only uncomment one.
 #define PAYLOAD_USE_FULL
@@ -129,10 +129,14 @@ void ttn_register(void (*callback)(uint8_t message));
 #define MISO_GPIO       19
 #define MOSI_GPIO       27
 #define NSS_GPIO        18
+#if defined(T_BEAM_V10)
+#define RESET_GPIO      14
+#else
 #define RESET_GPIO      23
+#endif
 #define DIO0_GPIO       26
-#define DIO1_GPIO       33
-#define DIO2_GPIO       32
+#define DIO1_GPIO       33 // Note: not really used on this board
+#define DIO2_GPIO       32 // Note: not really used on this board
 
 // -----------------------------------------------------------------------------
 // AXP192 (Rev1-specific options)
