@@ -90,10 +90,18 @@ void forceTxSingleChannelDr() {
     ttn_sf(LORAWAN_SF);
 }
 
+
+static void printHex2(unsigned v) {
+    v &= 0xff;
+    if (v < 16)
+        Serial.print('0');
+    Serial.print(v, HEX);
+}
+
 // LMIC library will call this method when an event is fired
 void onEvent(ev_t event) {
     switch(event) {
-    case EV_JOINED:
+    case EV_JOINED: {
         #ifdef SINGLE_CHANNEL_GATEWAY
         forceTxSingleChannelDr();
         #endif
@@ -104,7 +112,41 @@ void onEvent(ev_t event) {
         if(!LORAWAN_ADR){
             LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
         }
-        break;
+
+        Serial.println(F("EV_JOINED"));
+
+        u4_t netid = 0;
+        devaddr_t devaddr = 0;
+        u1_t nwkKey[16];
+        u1_t artKey[16];
+        LMIC_getSessionKeys(&netid, &devaddr, nwkKey, artKey);
+        Serial.print("netid: ");
+        Serial.println(netid, DEC);
+        Serial.print("devaddr: ");
+        Serial.println(devaddr, HEX);
+        Serial.print("AppSKey: ");
+        for (size_t i=0; i<sizeof(artKey); ++i) {
+        if (i != 0)
+            Serial.print("-");
+        printHex2(artKey[i]);
+        }
+        Serial.println("");
+        Serial.print("NwkSKey: ");
+        for (size_t i=0; i<sizeof(nwkKey); ++i) {
+        if (i != 0)
+                Serial.print("-");
+        printHex2(nwkKey[i]);
+        }
+        Serial.println();
+
+        Preferences p;
+        p.begin("lora", false);
+        p.putUInt("netId", netid);
+        p.putUInt("devAddr", devaddr);
+        p.putBytes("nwkKey", nwkKey, sizeof(nwkKey));
+        p.putBytes("artKey", artKey, sizeof(artKey));
+        p.end();
+        break; }
     case EV_TXCOMPLETE:
         Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
         if (LMIC.txrxFlags & TXRX_ACK) {
@@ -236,15 +278,35 @@ void ttn_join() {
 
     #elif defined(USE_OTAA)
 
-      #ifdef SINGLE_CHANNEL_GATEWAY
-      // LMiC will already have decided to send on one of the 3 default
-      // channels; ensure it uses the one we want
-      LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
-      #endif
+        #ifdef SINGLE_CHANNEL_GATEWAY
+        // LMiC will already have decided to send on one of the 3 default
+        // channels; ensure it uses the one we want
+        LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
+        #endif
 
-      // Make LMiC initialize the default channels, choose a channel, and
-      // schedule the OTAA join
-      LMIC_startJoining();
+        Preferences p;
+        p.begin("lora", true);
+        uint32_t netId = p.getUInt("netId", UINT32_MAX);
+        uint32_t devAddr = p.getUInt("devAddr", UINT32_MAX);
+        uint8_t nwkKey[16], artKey[16];
+        bool keysgood = p.getBytes("nwkKey", nwkKey, sizeof(nwkKey)) == sizeof(nwkKey) && 
+                        p.getBytes("artKey", artKey, sizeof(artKey)) == sizeof(artKey);
+        p.end(); // close our prefs
+
+        if(!keysgood) {
+            // We have not yet joined a network, start a full join attempt
+            // Make LMiC initialize the default channels, choose a channel, and
+            // schedule the OTAA join
+            Serial.println("No session saved, joining from scratch");
+            LMIC_startJoining();
+        }
+        else {
+            Serial.println("Rejoining saved session");
+            LMIC_setSession(netId, devAddr, nwkKey, artKey);
+
+            // Trigger a false joined
+            _ttn_callback(EV_JOINED);
+        }
 
     #endif
 }
