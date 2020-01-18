@@ -135,8 +135,8 @@ void ttn_register(void (*callback)(uint8_t message));
 #define RESET_GPIO      23
 #endif
 #define DIO0_GPIO       26
-#define DIO1_GPIO       33 // Note: not really used on this board
-#define DIO2_GPIO       32 // Note: not really used on this board
+#define DIO1_GPIO       0xff // Note: not really used on this board
+#define DIO2_GPIO       0xff // Note: not really used on this board
 
 // -----------------------------------------------------------------------------
 // AXP192 (Rev1-specific options)
