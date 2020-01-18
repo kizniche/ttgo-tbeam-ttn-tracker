@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <hal/hal.h>
 #include <SPI.h>
 #include <vector>
+#include <Preferences.h>
 #include "configuration.h"
 #include "credentials.h"
 
@@ -41,6 +42,10 @@ const lmic_pinmap lmic_pins = {
     .rst = RESET_GPIO,
     .dio = {DIO0_GPIO, DIO1_GPIO, DIO2_GPIO},
 };
+
+
+// Message counter, stored in RTC memory, survives deep sleep.
+static RTC_DATA_ATTR uint32_t count = 0;
 
 #ifdef USE_ABP
 // These callbacks are only used in over-the-air activation, so they are
@@ -96,7 +101,9 @@ void onEvent(ev_t event) {
         // Disable link check validation (automatically enabled
         // during join, but because slow data rates change max TX
         // size, we don't use it in this example.
-        LMIC_setLinkCheckMode(0);
+        if(!LORAWAN_ADR){
+            LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
+        }
         break;
     case EV_TXCOMPLETE:
         Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
@@ -137,7 +144,20 @@ void ttn_response(uint8_t * buffer, size_t len) {
     }
 }
 
+// If the value for LORA packet counts is unknown, restore from flash
+static void initCount() {
+  if(count == 0) {
+    Preferences p;
+    p.begin("lora", true);
+    count = p.getUInt("count", 0);
+    p.end();
+  }
+}
+
+
 bool ttn_setup() {
+    initCount();
+
     // SPI interface
     SPI.begin(SCK_GPIO, MISO_GPIO, MOSI_GPIO, NSS_GPIO);
 
@@ -238,11 +258,31 @@ void ttn_adr(bool enabled) {
     LMIC_setLinkCheckMode(!enabled);
 }
 
-void ttn_cnt(uint32_t num) {
-    LMIC_setSeqnoUp(num);
+uint32_t ttn_get_count() {
+  return count;
+}
+
+static void ttn_set_cnt() {
+    LMIC_setSeqnoUp(count);
+
+    // We occasionally mirror our count to flash, to ensure that if we lose power we will at least start with a count that is almost correct 
+    // (otherwise the TNN network will discard packets until count once again reaches the value they've seen).  We limit these writes to a max rate
+    // of one write every 5 minutes.  Which should let the FLASH last for 300 years (given the ESP32 NVS algoritm)
+    static uint32_t lastWriteMsec = UINT32_MAX; // Ensure we write at least once
+    uint32_t now = millis();
+    if(now < lastWriteMsec || (now - lastWriteMsec) > 5 * 60 * 1000L) { // write if we roll over (50 days) or 5 mins
+        lastWriteMsec = now;
+
+        Preferences p;
+        p.begin("lora", false);
+        p.putUInt("count", count);
+        p.end();
+    }
 }
 
 void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
+    ttn_set_cnt(); // we are about to send using the current packet count
+
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         _ttn_callback(EV_PENDING);
@@ -254,6 +294,7 @@ void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
     LMIC_setTxData2(port, data, data_size, confirmed ? 1 : 0);
 
     _ttn_callback(EV_QUEUED);
+    count++;
 }
 
 void ttn_loop() {

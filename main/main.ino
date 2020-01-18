@@ -36,9 +36,6 @@ String baChStatus = "No charging";
 bool ssd1306_found = false;
 bool axp192_found = false;
 
-// Message counter, stored in RTC memory, survives deep sleep
-RTC_DATA_ATTR uint32_t count = 0;
-
 #if defined(PAYLOAD_USE_FULL)
   // includes number of satellites and accuracy
   uint8_t txBuffer[10];
@@ -70,10 +67,7 @@ void send() {
   bool confirmed = false;
 #endif
 
-  ttn_cnt(count);
   ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
-
-  count++;
 }
 
 void sleep() {
@@ -170,9 +164,7 @@ void callback(uint8_t message) {
   }
 }
 
-uint32_t get_count() {
-  return count;
-}
+
 
 void scanI2Cdevice(void)
 {
@@ -281,8 +273,8 @@ void setup() {
   // Init GPS
   gps_setup();
 
-  // Show logo on first boot
-  if (0 == count) {
+  // Show logo on first boot after removing battery
+  if (ttn_get_count() == 0) {
     screen_print(APP_NAME " " APP_VERSION, 0, 0);
     screen_show_logo();
     screen_update();
@@ -299,11 +291,7 @@ void setup() {
 
   ttn_register(callback);
   ttn_join();
-  ttn_sf(LORAWAN_SF);
   ttn_adr(LORAWAN_ADR);
-  if(!LORAWAN_ADR){
-    LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
-  }
 }
 
 void loop() {
