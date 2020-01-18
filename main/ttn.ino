@@ -92,6 +92,11 @@ void onEvent(ev_t event) {
         #ifdef SINGLE_CHANNEL_GATEWAY
         forceTxSingleChannelDr();
         #endif
+
+        // Disable link check validation (automatically enabled
+        // during join, but because slow data rates change max TX
+        // size, we don't use it in this example.
+        LMIC_setLinkCheckMode(0);
         break;
     case EV_TXCOMPLETE:
         Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
@@ -148,16 +153,6 @@ void ttn_join() {
     LMIC_setClockError(MAX_CLOCK_ERROR * CLOCK_ERROR / 100);
     #endif
 
-    #if defined(USE_ABP)
-
-        // Set static session parameters. Instead of dynamically establishing a session
-        // by joining the network, precomputed session parameters are be provided.
-        uint8_t appskey[sizeof(APPSKEY)];
-        uint8_t nwkskey[sizeof(NWKSKEY)];
-        memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
-        memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
-        LMIC_setSession(0x1, DEVADDR, nwkskey, appskey);
-
         #if defined(CFG_eu868)
 
             // Set up the channels used by the Things Network, which corresponds
@@ -196,9 +191,6 @@ void ttn_join() {
         // Disable link check validation
         LMIC_setLinkCheckMode(0);
 
-        // TTN uses SF9 for its RX2 window.
-        LMIC.dn2Dr = DR_SF9;
-
         #ifdef SINGLE_CHANNEL_GATEWAY
         forceTxSingleChannelDr();
         #else
@@ -206,20 +198,33 @@ void ttn_join() {
         ttn_sf(LORAWAN_SF);
         #endif
 
+    #if defined(USE_ABP)
+
+        // Set static session parameters. Instead of dynamically establishing a session
+        // by joining the network, precomputed session parameters are be provided.
+        uint8_t appskey[sizeof(APPSKEY)];
+        uint8_t nwkskey[sizeof(NWKSKEY)];
+        memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
+        memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
+        LMIC_setSession(0x1, DEVADDR, nwkskey, appskey);
+
+        // TTN uses SF9 for its RX2 window.
+        LMIC.dn2Dr = DR_SF9;
+
         // Trigger a false joined
         _ttn_callback(EV_JOINED);
 
     #elif defined(USE_OTAA)
 
       #ifdef SINGLE_CHANNEL_GATEWAY
-      // Make LMiC initialize the default channels, choose a channel, and
-      // schedule the OTAA join
-      LMIC_startJoining();
-
       // LMiC will already have decided to send on one of the 3 default
       // channels; ensure it uses the one we want
       LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
       #endif
+
+      // Make LMiC initialize the default channels, choose a channel, and
+      // schedule the OTAA join
+      LMIC_startJoining();
 
     #endif
 }

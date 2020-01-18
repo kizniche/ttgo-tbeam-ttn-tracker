@@ -101,9 +101,45 @@ void sleep() {
 #endif
 }
 
+void printHex2(unsigned v) {
+    v &= 0xff;
+    if (v < 16)
+        Serial.print('0');
+    Serial.print(v, HEX);
+}
+
+
 void callback(uint8_t message) {
   if (EV_JOINING == message) screen_print("Joining TTN...\n");
-  if (EV_JOINED == message) screen_print("TTN joined!\n");
+  if (EV_JOINED == message) {
+    screen_print("TTN joined!\n");
+
+    Serial.println(F("EV_JOINED"));
+
+    u4_t netid = 0;
+    devaddr_t devaddr = 0;
+    u1_t nwkKey[16];
+    u1_t artKey[16];
+    LMIC_getSessionKeys(&netid, &devaddr, nwkKey, artKey);
+    Serial.print("netid: ");
+    Serial.println(netid, DEC);
+    Serial.print("devaddr: ");
+    Serial.println(devaddr, HEX);
+    Serial.print("AppSKey: ");
+    for (size_t i=0; i<sizeof(artKey); ++i) {
+      if (i != 0)
+          Serial.print("-");
+      printHex2(artKey[i]);
+    }
+    Serial.println("");
+    Serial.print("NwkSKey: ");
+    for (size_t i=0; i<sizeof(nwkKey); ++i) {
+      if (i != 0)
+              Serial.print("-");
+      printHex2(nwkKey[i]);
+    }
+    Serial.println();
+  }
   if (EV_JOIN_FAILED == message) screen_print("TTN join failed\n");
   if (EV_REJOIN_FAILED == message) screen_print("TTN rejoin failed\n");
   if (EV_RESET == message) screen_print("Reset TTN connection\n");
