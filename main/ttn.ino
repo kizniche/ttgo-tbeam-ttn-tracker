@@ -58,7 +58,7 @@ void os_getDevKey (u1_t* buf) { }
 
 #ifdef USE_OTAA
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
-void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8); }
+void os_getDevEui (u1_t* buf) { memcpy(buf, DEVEUI, 8); }
 void os_getDevKey (u1_t* buf) { memcpy_P(buf, APPKEY, 16); }
 #endif
 
@@ -91,11 +91,47 @@ void forceTxSingleChannelDr() {
 }
 
 
+// DevEUI generator using devices's MAC address - from https://github.com/cyberman54/ESP32-Paxcounter/blob/master/src/lorawan.cpp
+void gen_lora_deveui(uint8_t *pdeveui) {
+    uint8_t *p = pdeveui, dmac[6];
+    int i = 0;
+    esp_efuse_mac_get_default(dmac);
+    // deveui is LSB, we reverse it so TTN DEVEUI display
+    // will remain the same as MAC address
+    // MAC is 6 bytes, devEUI 8, set first 2 ones
+    // with an arbitrary value
+    *p++ = 0xFF;
+    *p++ = 0xFE;
+    // Then next 6 bytes are mac address reversed
+    for (i = 0; i < 6; i++) {
+        *p++ = dmac[5 - i];
+    }
+}
+
+
 static void printHex2(unsigned v) {
     v &= 0xff;
     if (v < 16)
         Serial.print('0');
     Serial.print(v, HEX);
+}
+
+// generate DevEUI from macaddr if needed
+void initDevEUI() {
+    bool needInit = true;
+    for(int i = 0; i < sizeof(DEVEUI); i++)
+        if(DEVEUI[i]) needInit = false;
+
+    if(needInit)
+        gen_lora_deveui(DEVEUI);
+
+    Serial.print("DevEUI: ");
+    for(int i = 0; i < sizeof(DEVEUI); i++) {
+        if (i != 0)
+                Serial.print("-");
+        printHex2(DEVEUI[i]);
+    }
+    Serial.println();
 }
 
 // LMIC library will call this method when an event is fired
@@ -126,16 +162,16 @@ void onEvent(ev_t event) {
         Serial.println(devaddr, HEX);
         Serial.print("AppSKey: ");
         for (size_t i=0; i<sizeof(artKey); ++i) {
-        if (i != 0)
-            Serial.print("-");
-        printHex2(artKey[i]);
+            if (i != 0)
+                Serial.print("-");
+            printHex2(artKey[i]);
         }
         Serial.println("");
         Serial.print("NwkSKey: ");
         for (size_t i=0; i<sizeof(nwkKey); ++i) {
-        if (i != 0)
-                Serial.print("-");
-        printHex2(nwkKey[i]);
+            if (i != 0)
+                    Serial.print("-");
+            printHex2(nwkKey[i]);
         }
         Serial.println();
 
@@ -199,6 +235,7 @@ static void initCount() {
 
 bool ttn_setup() {
     initCount();
+    initDevEUI();
 
     // SPI interface
     SPI.begin(SCK_GPIO, MISO_GPIO, MOSI_GPIO, NSS_GPIO);
@@ -241,6 +278,10 @@ void ttn_join() {
             // but only one group of 8 should (a subband) should be active
             // TTN recommends the second sub band, 1 in a zero based count.
             // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+            // in the US, with TTN, it saves join time if we start on subband 1
+            // (channels 8-15). This will get overridden after the join by
+            // parameters from the network. If working with other networks or in
+            // other regions, this will need to be changed.
             LMIC_selectSubBand(1);
 
         #endif
