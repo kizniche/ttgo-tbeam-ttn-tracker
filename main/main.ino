@@ -178,7 +178,7 @@ void scanI2Cdevice(void)
     DCDC1 0.7-3.5V @ 1200mA max -> OLED // If you turn this off you'll lose comms to the axp192 because the OLED and the axp192 share the same i2c bus, instead use ssd1306 sleep mode
     DCDC2 -> unused
     DCDC3 0.7-3.5V @ 700mA max -> ESP32 (keep this on!)
-    LDO1 30mA -> charges GPS backup battery // turn this off during deep sleep to force the tiny J13 battery by the GPS to power the GPS ram (for a couple of days)
+    LDO1 30mA -> charges GPS backup battery // charges the tiny J13 battery by the GPS to power the GPS ram (for a couple of days), can not be turned off
     LDO2 200mA -> LORA
     LDO3 200mA -> GPS
  */
@@ -198,8 +198,8 @@ void axp192Init() {
         Serial.printf("Exten: %s\n", axp.isExtenEnable() ? "ENABLE" : "DISABLE");
         Serial.println("----------------------------------------");
 
-        axp.setPowerOutPut(AXP192_LDO2, AXP202_ON);
-        axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);
+        axp.setPowerOutPut(AXP192_LDO2, AXP202_ON); // LORA radio
+        axp.setPowerOutPut(AXP192_LDO3, AXP202_ON); // GPS main power
         axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
         axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
         axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
@@ -230,6 +230,37 @@ void axp192Init() {
 }
 
 
+void doDeepSleep()
+{
+#if DEEPSLEEP_INTERVAL
+    uint64_t msecToWake = DEEPSLEEP_INTERVAL;
+    Serial.printf("Entering deep sleep %llu\n", msecToWake);
+
+    // not using wifi yet, but once we are this is needed to shutoff the radio hw
+    // esp_wifi_stop();
+
+    screen_off(); // datasheet says this will draw only 10ua
+    if(axp192_found) {
+        axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
+        axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
+    }
+
+    // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
+    // until then we need the following lines
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+
+    // Only GPIOs which are have RTC functionality can be used in this bit map: 0,2,4,12-15,25-27,32-39.
+    uint64_t gpioMask = (1ULL << BUTTON_PIN);
+
+    // FIXME change polarity so we can wake on ANY_HIGH instead - that would allow us to use all three buttons (instead of just the first)
+    gpio_pullup_en((gpio_num_t) BUTTON_PIN);
+
+    esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
+
+    esp_sleep_enable_timer_wakeup(msecToWake * 1000ULL); // call expects usecs
+    esp_deep_sleep_start();                              // 0.25 mA sleep current (battery)
+#endif
+}
 
 void setup() {
   // Debug

@@ -66,6 +66,9 @@ void ttn_register(void (*callback)(uint8_t message));
 #define LORAWAN_ADR             0           // Enable ADR
 #define GPS_WAIT_FOR_LOCK       5000        // Wait 5s after every boot for GPS lock
 
+// If defined, we will enter deep sleep after sending our packet.  We will sleep until this interval expires or the user presses the button
+#define DEEPSLEEP_INTERVAL (60 * 60 * 1000ULL) // sleep after we've received one message from the server (or we ran out of time), sleep for this many msecs
+
 // -----------------------------------------------------------------------------
 // DEBUG
 // -----------------------------------------------------------------------------
