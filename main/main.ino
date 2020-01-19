@@ -36,6 +36,8 @@ String baChStatus = "No charging";
 bool ssd1306_found = false;
 bool axp192_found = false;
 
+bool packetSent, packetQueued;
+
 #if defined(PAYLOAD_USE_FULL)
   // includes number of satellites and accuracy
   static uint8_t txBuffer[10];
@@ -54,24 +56,37 @@ esp_sleep_source_t wakeCause; // the reason we booted this time
 
 void buildPacket(uint8_t txBuffer[]); // needed for platformio
 
-void send() {
-  char buffer[40];
-  snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
-  screen_print(buffer);
-  snprintf(buffer, sizeof(buffer), "Longitude: %10.6f\n", gps_longitude());
-  screen_print(buffer);
-  snprintf(buffer, sizeof(buffer), "Error: %4.2fm\n", gps_hdop());
-  screen_print(buffer);
+/**
+ * If we have a valid position send it to the server.
+ * @return true if we decided to send.
+ */
+bool trySend() {
+  packetSent = false;
+  if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0)
+  {
+    char buffer[40];
+    snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
+    screen_print(buffer);
+    snprintf(buffer, sizeof(buffer), "Longitude: %10.6f\n", gps_longitude());
+    screen_print(buffer);
+    snprintf(buffer, sizeof(buffer), "Error: %4.2fm\n", gps_hdop());
+    screen_print(buffer);
 
-  buildPacket(txBuffer);
+    buildPacket(txBuffer);
 
 #if LORAWAN_CONFIRMED_EVERY > 0
-  bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
+    bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
 #else
-  bool confirmed = false;
+    bool confirmed = false;
 #endif
 
-  ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
+    packetQueued = true;
+    ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 void sleep() {
@@ -115,9 +130,11 @@ void callback(uint8_t message) {
   if (EV_PENDING == message) screen_print("Message discarded\n");
   if (EV_QUEUED == message) screen_print("Message queued\n");
 
-  if (EV_TXCOMPLETE == message) {
+  // We only want to say 'packetSent' for our packets (not packets needed for joining)
+  if (EV_TXCOMPLETE == message && packetQueued) {
     screen_print("Message sent\n");
-    sleep();
+    packetQueued = false;
+    packetSent = true;
   }
 
   if (EV_RESPONSE == message) {
@@ -234,41 +251,6 @@ void axp192Init() {
 }
 
 
-void doDeepSleep()
-{
-#if DEEPSLEEP_INTERVAL
-    uint64_t msecToWake = DEEPSLEEP_INTERVAL;
-    Serial.printf("Entering deep sleep %llu\n", msecToWake);
-
-    // not using wifi yet, but once we are this is needed to shutoff the radio hw
-    // esp_wifi_stop();
-
-    screen_off(); // datasheet says this will draw only 10ua
-    LMIC_shutdown(); // cleanly shutdown the radio
-    
-    if(axp192_found) {
-        // turn on after initial testing with real hardware
-        // axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
-        // axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
-    }
-
-    // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
-    // until then we need the following lines
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-
-    // Only GPIOs which are have RTC functionality can be used in this bit map: 0,2,4,12-15,25-27,32-39.
-    uint64_t gpioMask = (1ULL << BUTTON_PIN);
-
-    // FIXME change polarity so we can wake on ANY_HIGH instead - that would allow us to use all three buttons (instead of just the first)
-    gpio_pullup_en((gpio_num_t) BUTTON_PIN);
-
-    esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
-
-    esp_sleep_enable_timer_wakeup(msecToWake * 1000ULL); // call expects usecs
-    esp_deep_sleep_start();                              // TBD mA sleep current (battery)
-#endif
-}
-
 // Perform power on init that we do on each wake from deep sleep
 void initDeepSleep() {
     bootCount++;
@@ -313,7 +295,10 @@ void setup() {
   DEBUG_MSG(APP_NAME " " APP_VERSION "\n");
 
   // Don't init display if we don't have one or we are waking headless due to a timer event
-  if(ssd1306_found && wakeCause != ESP_SLEEP_WAKEUP_TIMER)
+  if(wakeCause == ESP_SLEEP_WAKEUP_TIMER)
+    ssd1306_found = false; // forget we even have the hardware
+
+  if(ssd1306_found)
     screen_setup();
 
   // Init GPS
@@ -340,20 +325,92 @@ void setup() {
   ttn_adr(LORAWAN_ADR);
 }
 
-void loop() {
-  gps_loop();
-  ttn_loop();
-  screen_loop();
+#ifdef DEEPSLEEP_INTERVAL
+
+void doDeepSleep()
+{
+    uint64_t msecToWake = DEEPSLEEP_INTERVAL;
+    Serial.printf("Entering deep sleep %llu\n", msecToWake);
+
+    // not using wifi yet, but once we are this is needed to shutoff the radio hw
+    // esp_wifi_stop();
+
+    screen_off(); // datasheet says this will draw only 10ua
+    LMIC_shutdown(); // cleanly shutdown the radio
+    
+    if(axp192_found) {
+        // turn on after initial testing with real hardware
+        // axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
+        // axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
+    }
+
+    // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
+    // until then we need the following lines
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+
+    // Only GPIOs which are have RTC functionality can be used in this bit map: 0,2,4,12-15,25-27,32-39.
+    uint64_t gpioMask = (1ULL << BUTTON_PIN);
+
+    // FIXME change polarity so we can wake on ANY_HIGH instead - that would allow us to use all three buttons (instead of just the first)
+    gpio_pullup_en((gpio_num_t) BUTTON_PIN);
+
+    esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
+
+    esp_sleep_enable_timer_wakeup(msecToWake * 1000ULL); // call expects usecs
+    esp_deep_sleep_start();                              // TBD mA sleep current (battery)
+}
+
+
+/// send ONE packet (or timeout waiting for GPS/LORA) and then enter deep sleep.  If screen is on let the user have a few seconds to
+/// see the results
+void deepSleepLoop() {
+  // Send every SEND_INTERVAL millis
+  static uint32_t last = 0, timeToSleep = 0;
+  static bool first = true;
+
+  uint32_t now = millis();
+
+  if(packetSent) { // we've sent at least one packet to the server
+    timeToSleep = ssd1306_found ? now + 5000 : now; // If the display is on allow the user a few seconds to see it, otherwise go to sleep ASAP
+  }
+
+  if(timeToSleep && now >= timeToSleep) // if a sleep was queued, possibly do it
+    doDeepSleep();
+
+  if (0 == last || now - last > SEND_INTERVAL) {
+    if (trySend()) {
+      last = millis();
+      first = false;
+      Serial.println("TRANSMITTED");
+    } else {
+      if (first) {
+        screen_print("Waiting GPS lock\n");
+        first = false;
+      }
+      if (millis() > GPS_WAIT_FOR_LOCK) { // we never found a GPS lock, just go back to sleep
+        doDeepSleep();
+      }
+    }
+  }
+}
+
+#else
+
+/// loop endlessly, sending a packet every SEND_INTERVAL
+void nonDeepSleepLoop() {
+  if(packetSent) {
+    packetSent = false;
+    sleep();
+  }
 
   // Send every SEND_INTERVAL millis
   static uint32_t last = 0;
   static bool first = true;
   if (0 == last || millis() - last > SEND_INTERVAL) {
-    if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0) {
+    if (trySend()) {
       last = millis();
       first = false;
-      Serial.println("TRANSMITTING");
-      send();
+      Serial.println("TRANSMITTED");
     } else {
       if (first) {
         screen_print("Waiting GPS lock\n");
@@ -364,4 +421,19 @@ void loop() {
       }
     }
   }
+}
+
+#endif
+
+
+void loop() {
+  gps_loop();
+  ttn_loop();
+  screen_loop();
+
+#ifdef DEEPSLEEP_INTERVAL
+  deepSleepLoop();
+#else
+  nonDeepSleepLoop();
+#endif
 }
