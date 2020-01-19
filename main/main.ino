@@ -38,11 +38,15 @@ bool axp192_found = false;
 
 #if defined(PAYLOAD_USE_FULL)
   // includes number of satellites and accuracy
-  uint8_t txBuffer[10];
+  static uint8_t txBuffer[10];
 #elif defined(PAYLOAD_USE_CAYENNE)
   // CAYENNE DF
   static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #endif
+
+// deep sleep support
+RTC_DATA_ATTR int bootCount = 0;
+esp_sleep_source_t wakeCause; // the reason we booted this time
 
 // -----------------------------------------------------------------------------
 // Application
@@ -240,9 +244,12 @@ void doDeepSleep()
     // esp_wifi_stop();
 
     screen_off(); // datasheet says this will draw only 10ua
+    LMIC_shutdown(); // cleanly shutdown the radio
+    
     if(axp192_found) {
-        axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
-        axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
+        // turn on after initial testing with real hardware
+        // axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
+        // axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
     }
 
     // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
@@ -258,8 +265,23 @@ void doDeepSleep()
     esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
 
     esp_sleep_enable_timer_wakeup(msecToWake * 1000ULL); // call expects usecs
-    esp_deep_sleep_start();                              // 0.25 mA sleep current (battery)
+    esp_deep_sleep_start();                              // TBD mA sleep current (battery)
 #endif
+}
+
+// Perform power on init that we do on each wake from deep sleep
+void initDeepSleep() {
+    bootCount++;
+    wakeCause = esp_sleep_get_wakeup_cause();
+    /* 
+    Not using yet because we are using wake on all buttons being low
+
+    wakeButtons = esp_sleep_get_ext1_wakeup_status();       // If one of these buttons is set it was the reason we woke
+    if (wakeCause == ESP_SLEEP_WAKEUP_EXT1 && !wakeButtons) // we must have been using the 'all buttons rule for waking' to support busted boards, assume button one was pressed
+        wakeButtons = ((uint64_t)1) << buttons.gpios[0];
+    */
+
+    Serial.printf("booted, wake cause %d (boot count %d)\n", wakeCause, bootCount);
 }
 
 void setup() {
@@ -268,7 +290,8 @@ void setup() {
   DEBUG_PORT.begin(SERIAL_BAUD);
   #endif
 
-  delay(1000);
+  initDeepSleep();
+  // delay(1000); FIXME - remove
 
   #ifdef T_BEAM_V10
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -293,7 +316,7 @@ void setup() {
   gps_setup();
 
   // Show logo on first boot after removing battery
-  if (ttn_get_count() == 0) {
+  if (bootCount == 0) {
     screen_print(APP_NAME " " APP_VERSION, 0, 0);
     screen_show_logo();
     screen_update();
