@@ -272,7 +272,7 @@ void doDeepSleep()
 // Perform power on init that we do on each wake from deep sleep
 void initDeepSleep() {
     bootCount++;
-    wakeCause = esp_sleep_get_wakeup_cause();
+    wakeCause = esp_sleep_get_wakeup_cause(); 
     /* 
     Not using yet because we are using wake on all buttons being low
 
@@ -293,12 +293,15 @@ void setup() {
   initDeepSleep();
   // delay(1000); FIXME - remove
 
-  #ifdef T_BEAM_V10
   Wire.begin(I2C_SDA, I2C_SCL);
   scanI2Cdevice();
+
+  // FIXME - remove once we know dynamic probing is working
+  #ifdef T_BEAM_V10
   axp192_found = true;
-  axp192Init();
+  ssd1306_found = true;
   #endif
+  axp192Init();
 
   // Buttons & LED
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -309,8 +312,9 @@ void setup() {
   // Hello
   DEBUG_MSG(APP_NAME " " APP_VERSION "\n");
 
-  // Display
-  screen_setup();
+  // Don't init display if we don't have one or we are waking headless due to a timer event
+  if(ssd1306_found && wakeCause != ESP_SLEEP_WAKEUP_TIMER)
+    screen_setup();
 
   // Init GPS
   gps_setup();

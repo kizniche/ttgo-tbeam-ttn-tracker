@@ -32,6 +32,8 @@ SSD1306Wire * display;
 uint8_t _screen_line = SCREEN_HEADER_HEIGHT - 1;
 
 void _screen_header() {
+    if(!display) return;
+
     char buffer[20];
 
     // Message count
@@ -51,25 +53,36 @@ void _screen_header() {
 }
 
 void screen_show_logo() {
+    if(!display) return;
+
     uint8_t x = (display->getWidth() - TTN_IMAGE_WIDTH) / 2;
     uint8_t y = SCREEN_HEADER_HEIGHT + (display->getHeight() - SCREEN_HEADER_HEIGHT - TTN_IMAGE_HEIGHT) / 2 + 1;
     display->drawXbm(x, y, TTN_IMAGE_WIDTH, TTN_IMAGE_HEIGHT, TTN_IMAGE);
 }
 
 void screen_off() {
+    if(!display) return;
+
     display->displayOff();
 }
 
 void screen_on() {
+    if(!display) return;
+
     display->displayOn();
 }
 
 void screen_clear() {
+    if(!display) return;
+
     display->clear();
 }
 
 void screen_print(const char * text, uint8_t x, uint8_t y, uint8_t alignment) {
     DEBUG_MSG(text);
+
+    if(!display) return;
+
     display->setTextAlignment((OLEDDISPLAY_TEXT_ALIGNMENT) alignment);
     display->drawString(x, y, text);
 }
@@ -79,6 +92,8 @@ void screen_print(const char * text, uint8_t x, uint8_t y) {
 }
 
 void screen_print(const char * text) {
+    if(!display) return;
+
     display->print(text);
     if (_screen_line + 8 > display->getHeight()) {
         // scroll
@@ -88,7 +103,8 @@ void screen_print(const char * text) {
 }
 
 void screen_update() {
-    display->display();
+    if(display)
+        display->display();
 }
 
 void screen_setup() {
@@ -103,6 +119,8 @@ void screen_setup() {
 }
 
 void screen_loop() {
+    if(!display) return;
+
     #ifdef T_BEAM_V10
     if (axp192_found && pmu_irq) {
         pmu_irq = false;
