@@ -263,6 +263,9 @@ void setup() {
   ttn_join();
   ttn_sf(LORAWAN_SF);
   ttn_adr(LORAWAN_ADR);
+  if(!LORAWAN_ADR){
+    LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
+  }
 }
 
 void loop() {

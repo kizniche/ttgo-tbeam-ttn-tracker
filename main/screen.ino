@@ -115,6 +115,7 @@ void screen_loop() {
         if (axp.isVbusRemoveIRQ()) {
             baChStatus = "No Charging";
         }
+    Serial.println(baChStatus); //Prints charging status to screen
         digitalWrite(2, !digitalRead(2));
         axp.clearIRQ();
     }
