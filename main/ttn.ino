@@ -211,11 +211,11 @@ void ttn_join() {
 
     #elif defined(USE_OTAA)
 
-      #ifdef SINGLE_CHANNEL_GATEWAY
       // Make LMiC initialize the default channels, choose a channel, and
       // schedule the OTAA join
       LMIC_startJoining();
 
+      #ifdef SINGLE_CHANNEL_GATEWAY
       // LMiC will already have decided to send on one of the 3 default
       // channels; ensure it uses the one we want
       LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
