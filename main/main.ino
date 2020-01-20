@@ -280,8 +280,8 @@ void setup() {
 
   // FIXME - remove once we know dynamic probing is working
   #ifdef T_BEAM_V10
-  axp192_found = true;
-  ssd1306_found = true;
+  // axp192_found = true;
+  // ssd1306_found = true;
   #endif
   axp192Init();
 
@@ -315,14 +315,18 @@ void setup() {
   // TTN setup
   if (!ttn_setup()) {
     screen_print("[ERR] Radio module not found!\n");
-    delay(MESSAGE_TO_SLEEP_DELAY);
-    screen_off();
-    sleep_forever();
-  }
 
-  ttn_register(callback);
-  ttn_join();
-  ttn_adr(LORAWAN_ADR);
+    if(REQUIRE_RADIO) {
+      delay(MESSAGE_TO_SLEEP_DELAY);
+      screen_off();
+      sleep_forever();
+    }
+  }
+  else {
+    ttn_register(callback);
+    ttn_join();
+    ttn_adr(LORAWAN_ADR);
+  }
 }
 
 #ifdef DEEPSLEEP_INTERVAL
@@ -387,9 +391,11 @@ void deepSleepLoop() {
         screen_print("Waiting GPS lock\n");
         first = false;
       }
+#ifdef GPS_WAIT_FOR_LOCK      
       if (millis() > GPS_WAIT_FOR_LOCK) { // we never found a GPS lock, just go back to sleep
         doDeepSleep();
       }
+#endif
     }
   }
 }
@@ -416,9 +422,11 @@ void nonDeepSleepLoop() {
         screen_print("Waiting GPS lock\n");
         first = false;
       }
+#ifdef GPS_WAIT_FOR_LOCK
       if (millis() > GPS_WAIT_FOR_LOCK) {
         sleep();
       }
+#endif
     }
   }
 }
