@@ -176,12 +176,13 @@ void onEvent(ev_t event) {
         Serial.println();
 
         Preferences p;
-        p.begin("lora", false);
-        p.putUInt("netId", netid);
-        p.putUInt("devAddr", devaddr);
-        p.putBytes("nwkKey", nwkKey, sizeof(nwkKey));
-        p.putBytes("artKey", artKey, sizeof(artKey));
-        p.end();
+        if(p.begin("lora", false)) {
+            p.putUInt("netId", netid);
+            p.putUInt("devAddr", devaddr);
+            p.putBytes("nwkKey", nwkKey, sizeof(nwkKey));
+            p.putBytes("artKey", artKey, sizeof(artKey));
+            p.end();
+        }
         break; }
     case EV_TXCOMPLETE:
         Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
@@ -226,9 +227,10 @@ void ttn_response(uint8_t * buffer, size_t len) {
 static void initCount() {
   if(count == 0) {
     Preferences p;
-    p.begin("lora", true);
-    count = p.getUInt("count", 0);
-    p.end();
+    if(p.begin("lora", true)) {
+        count = p.getUInt("count", 0);
+        p.end();
+    }
   }
 }
 
@@ -326,7 +328,7 @@ void ttn_join() {
         #endif
 
         Preferences p;
-        p.begin("lora", true);
+        p.begin("lora", true); // we intentionally ignore failure here
         uint32_t netId = p.getUInt("netId", UINT32_MAX);
         uint32_t devAddr = p.getUInt("devAddr", UINT32_MAX);
         uint8_t nwkKey[16], artKey[16];
@@ -377,9 +379,10 @@ static void ttn_set_cnt() {
         lastWriteMsec = now;
 
         Preferences p;
-        p.begin("lora", false);
-        p.putUInt("count", count);
-        p.end();
+        if(p.begin("lora", false)) {
+            p.putUInt("count", count);
+            p.end();
+        }
     }
 }
 
