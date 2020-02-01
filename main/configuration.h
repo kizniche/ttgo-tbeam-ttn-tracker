@@ -56,8 +56,8 @@ void ttn_register(void (*callback)(uint8_t message));
 
 #define DEBUG_PORT              Serial      // Serial debug port
 #define SERIAL_BAUD             115200      // Serial debug baud rate
-#define SLEEP_BETWEEN_MESSAGES  0           // Do sleep between messages
-#define SEND_INTERVAL           60000       // Sleep for these many millis
+#define SLEEP_BETWEEN_MESSAGES  true        // Do sleep between messages
+#define SEND_INTERVAL           (5 * 60 * 1000) // Sleep for these many millis
 #define MESSAGE_TO_SLEEP_DELAY  5000        // Time after message before going to sleep
 #define LOGO_DELAY              5000        // Time to show logo on first boot
 #define LORAWAN_PORT            10          // Port the messages will be sent to
@@ -67,10 +67,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #define REQUIRE_RADIO           true        // If true, we will fail to start if the radio is not found
 
 // If not defined, we will wait for lock forever
-// #define GPS_WAIT_FOR_LOCK       5000        // Wait 5s after every boot for GPS lock
-
-// If defined, we will enter deep sleep after sending our packet.  We will sleep until this interval expires or the user presses the button
-// #define DEEPSLEEP_INTERVAL (60 * 60 * 1000ULL) // sleep after we've received one message from the server (or we ran out of time), sleep for this many msecs
+#define GPS_WAIT_FOR_LOCK       (30 * 1000)  // Wait 30s after every boot for GPS lock (may need longer than 5s because we turned the gps off during deep sleep)
 
 // -----------------------------------------------------------------------------
 // DEBUG
