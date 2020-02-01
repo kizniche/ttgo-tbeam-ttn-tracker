@@ -392,6 +392,10 @@ void loop() {
         sleep();
       }
 #endif
+
+      // No GPS lock yet, let the OS put the main CPU in low power mode for 100ms (or until another interrupt comes in)
+      // i.e. don't just keep spinning in loop as fast as we can.
+      delay(100);
     }
   }
 }
