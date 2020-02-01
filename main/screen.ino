@@ -92,6 +92,7 @@ void screen_print(const char * text, uint8_t x, uint8_t y) {
 }
 
 void screen_print(const char * text) {
+    Serial.printf("Screen: %s\n", text);
     if(!display) return;
 
     display->print(text);
