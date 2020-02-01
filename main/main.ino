@@ -62,7 +62,8 @@ void buildPacket(uint8_t txBuffer[]); // needed for platformio
  */
 bool trySend() {
   packetSent = false;
-  if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0)
+  // We also wait for altitude being not exactly zero, because the GPS chip generates a bogus 0 alt report when first powered on
+  if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0 && gps_altitude() != 0)
   {
     char buffer[40];
     snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
