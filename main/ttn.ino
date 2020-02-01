@@ -386,6 +386,15 @@ static void ttn_set_cnt() {
     }
 }
 
+/// Blow away our prefs (i.e. to rejoin from scratch)
+void ttn_erase_prefs() {
+    Preferences p;
+    if(p.begin("lora", false)) {
+        p.clear();
+        p.end();
+    }
+}
+
 void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
     ttn_set_cnt(); // we are about to send using the current packet count
 

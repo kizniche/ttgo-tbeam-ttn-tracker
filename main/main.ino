@@ -127,16 +127,19 @@ void doDeepSleep(uint64_t msecToWake)
 void sleep() {
 #if SLEEP_BETWEEN_MESSAGES
 
-  // Show the going to sleep message on the screen
-  char buffer[20];
-  snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
-  screen_print(buffer);
+  // If the user has a screen, tell them we are about to sleep
+  if(ssd1306_found) {
+    // Show the going to sleep message on the screen
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
+    screen_print(buffer);
 
-  // Wait for MESSAGE_TO_SLEEP_DELAY millis to sleep
-  delay(MESSAGE_TO_SLEEP_DELAY);
+    // Wait for MESSAGE_TO_SLEEP_DELAY millis to sleep
+    delay(MESSAGE_TO_SLEEP_DELAY);
 
-  // Turn off screen
-  screen_off();
+    // Turn off screen
+    screen_off();
+    }
 
   // Set the user button to wake the board
   sleep_interrupt(BUTTON_PIN, LOW);
@@ -366,6 +369,27 @@ void loop() {
   if(packetSent) {
     packetSent = false;
     sleep();
+  }
+
+  // if user presses button for more than 3 secs, discard our network prefs and reboot (FIXME, use a debounce lib instead of this boilerplate)
+  static bool wasPressed = false;
+  static uint32_t minPressMs; // what tick should we call this press long enough
+  if(!digitalRead(BUTTON_PIN)) {
+    if(!wasPressed) { // just started a new press
+      Serial.println("pressing");
+      wasPressed = true;
+      minPressMs = millis() + 3000;
+    } 
+  } else if(wasPressed) {
+    // we just did a release
+    wasPressed = false;
+    if(millis() > minPressMs) {
+      // held long enough
+      screen_print("Erasing prefs");
+      ttn_erase_prefs();
+      delay(5000); // Give some time to read the screen
+      ESP.restart();
+    }
   }
 
   // Send every SEND_INTERVAL millis
