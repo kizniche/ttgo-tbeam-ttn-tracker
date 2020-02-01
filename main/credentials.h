@@ -24,6 +24,9 @@ Credentials file
 
 #ifdef USE_OTAA
 
+#if 0
+    // copy these variables to ../credentials-private.h and customize with your secret appkey.
+    
     // This EUI must be in little-endian format, so least-significant-byte
     // first. When copying an EUI from ttnctl output, this means to reverse
     // the bytes. For TTN issued EUIs the last bytes should be 0x00, 0x00,
@@ -39,5 +42,6 @@ Credentials file
     // practice, a key taken from ttnctl can be copied as-is.
     // The key shown here is the semtech default key.
     static const u1_t PROGMEM APPKEY[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#endif 
 
 #endif

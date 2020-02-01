@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "configuration.h"
 #include "credentials.h"
 
+// This file should not be in any publig git repos, it contains your secret APPKEY
+#include "../credentials-private.h"
+
 // -----------------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------------
