@@ -308,16 +308,10 @@ void setup() {
   #endif
 
   initDeepSleep();
-  // delay(1000); FIXME - remove
 
   Wire.begin(I2C_SDA, I2C_SCL);
   scanI2Cdevice();
 
-  // FIXME - remove once we know dynamic probing is working
-  #ifdef T_BEAM_V10
-  // axp192_found = true;
-  // ssd1306_found = true;
-  #endif
   axp192Init();
 
   // Buttons & LED
