@@ -39,8 +39,14 @@ void _screen_header() {
     display->setTextAlignment(TEXT_ALIGN_LEFT);
     display->drawString(0, 2, buffer);
 
-    // Datetime
-    gps_time(buffer, sizeof(buffer));
+    // Datetime (if the axp192 PMIC is present, alternate between powerstats and time)
+    if(axp192_found && millis()%8000 < 3000){
+        snprintf(buffer, sizeof(buffer), "%.1fV %.0fmA", axp.getBattVoltage()/1000, axp.getBattChargeCurrent() - axp.getBattDischargeCurrent());
+
+    } else {
+        gps_time(buffer, sizeof(buffer));
+    }
+    
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->drawString(display->getWidth()/2, 2, buffer);
 
