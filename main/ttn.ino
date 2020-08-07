@@ -186,6 +186,12 @@ void ttn_join() {
             // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
             LMIC_selectSubBand(1);
 
+        #elif defined(CFG_au915)
+
+            // set sub band for AU915
+            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/AU-global_conf.json
+            LMIC_selectSubBand(1);
+        
         #endif
 
         // TTN defines an additional channel at 869.525Mhz using SF9 for class B
