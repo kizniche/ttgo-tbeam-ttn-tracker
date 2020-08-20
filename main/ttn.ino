@@ -27,8 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <hal/hal.h>
 #include <SPI.h>
 #include <vector>
+#include <Preferences.h>
 #include "configuration.h"
 #include "credentials.h"
+
+// This file should not be in any publig git repos, it contains your secret APPKEY
+#include "../credentials-private.h"
 
 // -----------------------------------------------------------------------------
 // Globals
@@ -42,6 +46,10 @@ const lmic_pinmap lmic_pins = {
     .dio = {DIO0_GPIO, DIO1_GPIO, DIO2_GPIO},
 };
 
+
+// Message counter, stored in RTC memory, survives deep sleep.
+static RTC_DATA_ATTR uint32_t count = 0;
+
 #ifdef USE_ABP
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -53,7 +61,7 @@ void os_getDevKey (u1_t* buf) { }
 
 #ifdef USE_OTAA
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
-void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8); }
+void os_getDevEui (u1_t* buf) { memcpy(buf, DEVEUI, 8); }
 void os_getDevKey (u1_t* buf) { memcpy_P(buf, APPKEY, 16); }
 #endif
 
@@ -85,14 +93,100 @@ void forceTxSingleChannelDr() {
     ttn_sf(LORAWAN_SF);
 }
 
+
+// DevEUI generator using devices's MAC address - from https://github.com/cyberman54/ESP32-Paxcounter/blob/master/src/lorawan.cpp
+void gen_lora_deveui(uint8_t *pdeveui) {
+    uint8_t *p = pdeveui, dmac[6];
+    int i = 0;
+    esp_efuse_mac_get_default(dmac);
+    // deveui is LSB, we reverse it so TTN DEVEUI display
+    // will remain the same as MAC address
+    // MAC is 6 bytes, devEUI 8, set first 2 ones
+    // with an arbitrary value
+    *p++ = 0xFF;
+    *p++ = 0xFE;
+    // Then next 6 bytes are mac address reversed
+    for (i = 0; i < 6; i++) {
+        *p++ = dmac[5 - i];
+    }
+}
+
+
+static void printHex2(unsigned v) {
+    v &= 0xff;
+    if (v < 16)
+        Serial.print('0');
+    Serial.print(v, HEX);
+}
+
+// generate DevEUI from macaddr if needed
+void initDevEUI() {
+    bool needInit = true;
+    for(int i = 0; i < sizeof(DEVEUI); i++)
+        if(DEVEUI[i]) needInit = false;
+
+    if(needInit)
+        gen_lora_deveui(DEVEUI);
+
+    Serial.print("DevEUI: ");
+    for(int i = 0; i < sizeof(DEVEUI); i++) {
+        if (i != 0)
+                Serial.print("-");
+        printHex2(DEVEUI[i]);
+    }
+    Serial.println();
+}
+
 // LMIC library will call this method when an event is fired
 void onEvent(ev_t event) {
     switch(event) {
-    case EV_JOINED:
+    case EV_JOINED: {
         #ifdef SINGLE_CHANNEL_GATEWAY
         forceTxSingleChannelDr();
         #endif
-        break;
+
+        // Disable link check validation (automatically enabled
+        // during join, but because slow data rates change max TX
+        // size, we don't use it in this example.
+        if(!LORAWAN_ADR){
+            LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
+        }
+
+        Serial.println(F("EV_JOINED"));
+
+        u4_t netid = 0;
+        devaddr_t devaddr = 0;
+        u1_t nwkKey[16];
+        u1_t artKey[16];
+        LMIC_getSessionKeys(&netid, &devaddr, nwkKey, artKey);
+        Serial.print("netid: ");
+        Serial.println(netid, DEC);
+        Serial.print("devaddr: ");
+        Serial.println(devaddr, HEX);
+        Serial.print("AppSKey: ");
+        for (size_t i=0; i<sizeof(artKey); ++i) {
+            if (i != 0)
+                Serial.print("-");
+            printHex2(artKey[i]);
+        }
+        Serial.println("");
+        Serial.print("NwkSKey: ");
+        for (size_t i=0; i<sizeof(nwkKey); ++i) {
+            if (i != 0)
+                    Serial.print("-");
+            printHex2(nwkKey[i]);
+        }
+        Serial.println();
+
+        Preferences p;
+        if(p.begin("lora", false)) {
+            p.putUInt("netId", netid);
+            p.putUInt("devAddr", devaddr);
+            p.putBytes("nwkKey", nwkKey, sizeof(nwkKey));
+            p.putBytes("artKey", artKey, sizeof(artKey));
+            p.end();
+        }
+        break; }
     case EV_TXCOMPLETE:
         Serial.println(F("EV_TXCOMPLETE (inc. RX win. wait)"));
         if (LMIC.txrxFlags & TXRX_ACK) {
@@ -132,7 +226,22 @@ void ttn_response(uint8_t * buffer, size_t len) {
     }
 }
 
+// If the value for LORA packet counts is unknown, restore from flash
+static void initCount() {
+  if(count == 0) {
+    Preferences p;
+    if(p.begin("lora", true)) {
+        count = p.getUInt("count", 0);
+        p.end();
+    }
+  }
+}
+
+
 bool ttn_setup() {
+    initCount();
+    initDevEUI();
+
     // SPI interface
     SPI.begin(SCK_GPIO, MISO_GPIO, MOSI_GPIO, NSS_GPIO);
 
@@ -147,16 +256,6 @@ void ttn_join() {
     #ifdef CLOCK_ERROR
     LMIC_setClockError(MAX_CLOCK_ERROR * CLOCK_ERROR / 100);
     #endif
-
-    #if defined(USE_ABP)
-
-        // Set static session parameters. Instead of dynamically establishing a session
-        // by joining the network, precomputed session parameters are be provided.
-        uint8_t appskey[sizeof(APPSKEY)];
-        uint8_t nwkskey[sizeof(NWKSKEY)];
-        memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
-        memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
-        LMIC_setSession(0x1, DEVADDR, nwkskey, appskey);
 
         #if defined(CFG_eu868)
 
@@ -184,6 +283,10 @@ void ttn_join() {
             // but only one group of 8 should (a subband) should be active
             // TTN recommends the second sub band, 1 in a zero based count.
             // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+            // in the US, with TTN, it saves join time if we start on subband 1
+            // (channels 8-15). This will get overridden after the join by
+            // parameters from the network. If working with other networks or in
+            // other regions, this will need to be changed.
             LMIC_selectSubBand(1);
 
         #elif defined(CFG_au915)
@@ -202,9 +305,6 @@ void ttn_join() {
         // Disable link check validation
         LMIC_setLinkCheckMode(0);
 
-        // TTN uses SF9 for its RX2 window.
-        LMIC.dn2Dr = DR_SF9;
-
         #ifdef SINGLE_CHANNEL_GATEWAY
         forceTxSingleChannelDr();
         #else
@@ -212,20 +312,57 @@ void ttn_join() {
         ttn_sf(LORAWAN_SF);
         #endif
 
+    #if defined(USE_ABP)
+
+        // Set static session parameters. Instead of dynamically establishing a session
+        // by joining the network, precomputed session parameters are be provided.
+        uint8_t appskey[sizeof(APPSKEY)];
+        uint8_t nwkskey[sizeof(NWKSKEY)];
+        memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
+        memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
+        LMIC_setSession(0x1, DEVADDR, nwkskey, appskey);
+
+        // TTN uses SF9 for its RX2 window.
+        LMIC.dn2Dr = DR_SF9;
+
         // Trigger a false joined
         _ttn_callback(EV_JOINED);
 
     #elif defined(USE_OTAA)
 
-      // Make LMiC initialize the default channels, choose a channel, and
-      // schedule the OTAA join
-      LMIC_startJoining();
+        // Make LMiC initialize the default channels, choose a channel, and
+        // schedule the OTAA join
+        LMIC_startJoining();
 
-      #ifdef SINGLE_CHANNEL_GATEWAY
-      // LMiC will already have decided to send on one of the 3 default
-      // channels; ensure it uses the one we want
-      LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
-      #endif
+        #ifdef SINGLE_CHANNEL_GATEWAY
+        // LMiC will already have decided to send on one of the 3 default
+        // channels; ensure it uses the one we want
+        LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
+        #endif
+
+        Preferences p;
+        p.begin("lora", true); // we intentionally ignore failure here
+        uint32_t netId = p.getUInt("netId", UINT32_MAX);
+        uint32_t devAddr = p.getUInt("devAddr", UINT32_MAX);
+        uint8_t nwkKey[16], artKey[16];
+        bool keysgood = p.getBytes("nwkKey", nwkKey, sizeof(nwkKey)) == sizeof(nwkKey) && 
+                        p.getBytes("artKey", artKey, sizeof(artKey)) == sizeof(artKey);
+        p.end(); // close our prefs
+
+        if(!keysgood) {
+            // We have not yet joined a network, start a full join attempt
+            // Make LMiC initialize the default channels, choose a channel, and
+            // schedule the OTAA join
+            Serial.println("No session saved, joining from scratch");
+            LMIC_startJoining();
+        }
+        else {
+            Serial.println("Rejoining saved session");
+            LMIC_setSession(netId, devAddr, nwkKey, artKey);
+
+            // Trigger a false joined
+            _ttn_callback(EV_JOINED);
+        }
 
     #endif
 }
@@ -239,11 +376,41 @@ void ttn_adr(bool enabled) {
     LMIC_setLinkCheckMode(!enabled);
 }
 
-void ttn_cnt(uint32_t num) {
-    LMIC_setSeqnoUp(num);
+uint32_t ttn_get_count() {
+  return count;
+}
+
+static void ttn_set_cnt() {
+    LMIC_setSeqnoUp(count);
+
+    // We occasionally mirror our count to flash, to ensure that if we lose power we will at least start with a count that is almost correct 
+    // (otherwise the TNN network will discard packets until count once again reaches the value they've seen).  We limit these writes to a max rate
+    // of one write every 5 minutes.  Which should let the FLASH last for 300 years (given the ESP32 NVS algoritm)
+    static uint32_t lastWriteMsec = UINT32_MAX; // Ensure we write at least once
+    uint32_t now = millis();
+    if(now < lastWriteMsec || (now - lastWriteMsec) > 5 * 60 * 1000L) { // write if we roll over (50 days) or 5 mins
+        lastWriteMsec = now;
+
+        Preferences p;
+        if(p.begin("lora", false)) {
+            p.putUInt("count", count);
+            p.end();
+        }
+    }
+}
+
+/// Blow away our prefs (i.e. to rejoin from scratch)
+void ttn_erase_prefs() {
+    Preferences p;
+    if(p.begin("lora", false)) {
+        p.clear();
+        p.end();
+    }
 }
 
 void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
+    ttn_set_cnt(); // we are about to send using the current packet count
+
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         _ttn_callback(EV_PENDING);
@@ -255,6 +422,7 @@ void ttn_send(uint8_t * data, uint8_t data_size, uint8_t port, bool confirmed){
     LMIC_setTxData2(port, data, data_size, confirmed ? 1 : 0);
 
     _ttn_callback(EV_QUEUED);
+    count++;
 }
 
 void ttn_loop() {
