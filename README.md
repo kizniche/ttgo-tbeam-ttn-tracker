@@ -1,6 +1,6 @@
 ## TTGO T-Beam Tracker for The Things Network
 
-Current version: 1.1.1
+Current version: 1.2.0
 
 Uploads GPS data from the TTGO T-Beam to [The Things Network](https://www.thethingsnetwork.org) (TTN) and [TTN Mapper](https://ttnmapper.org) for tracking and determining signal strength of LoRaWAN gateways and nodes.
 
@@ -22,7 +22,7 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
    * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306) (for Rev0 and Rev1)
    * [lewisxhe/AXP202X_Library](https://github.com/lewisxhe/AXP202X_Library) (for Rev1 only)
 
-3. Copy the contents of the project file ```main/lmic_project_config.h``` to the library file ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
+3. Edit ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
 4. Edit this project file ```main/configuration.h``` and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
 

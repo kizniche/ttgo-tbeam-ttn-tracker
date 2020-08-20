@@ -31,9 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "configuration.h"
 #include "credentials.h"
 
-// This file should not be in any publig git repos, it contains your secret APPKEY
-#include "../credentials-private.h"
-
 // -----------------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------------
@@ -119,6 +116,7 @@ static void printHex2(unsigned v) {
     Serial.print(v, HEX);
 }
 
+#ifdef USE_OTAA
 // generate DevEUI from macaddr if needed
 void initDevEUI() {
     bool needInit = true;
@@ -136,6 +134,7 @@ void initDevEUI() {
     }
     Serial.println();
 }
+#endif
 
 // LMIC library will call this method when an event is fired
 void onEvent(ev_t event) {
@@ -240,7 +239,10 @@ static void initCount() {
 
 bool ttn_setup() {
     initCount();
-    initDevEUI();
+
+    #if defined(USE_OTAA)
+        initDevEUI();
+    #endif
 
     // SPI interface
     SPI.begin(SCK_GPIO, MISO_GPIO, MOSI_GPIO, NSS_GPIO);

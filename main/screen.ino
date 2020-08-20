@@ -73,7 +73,7 @@ void screen_off() {
 }
 
 void screen_on() {
-    if(!display) return;
+    if (!display) return;
 
     display->displayOn();
 }
@@ -110,8 +110,7 @@ void screen_print(const char * text) {
 }
 
 void screen_update() {
-    if(display)
-        display->display();
+    if (display) display->display();
 }
 
 void screen_setup() {
@@ -126,7 +125,7 @@ void screen_setup() {
 }
 
 void screen_loop() {
-    if(!display) return;
+    if (!display) return;
 
     #ifdef T_BEAM_V10
     if (axp192_found && pmu_irq) {

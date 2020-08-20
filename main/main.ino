@@ -128,7 +128,7 @@ void sleep() {
 #if SLEEP_BETWEEN_MESSAGES
 
   // If the user has a screen, tell them we are about to sleep
-  if(ssd1306_found) {
+  if (ssd1306_found) {
     // Show the going to sleep message on the screen
     char buffer[20];
     snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
@@ -139,7 +139,7 @@ void sleep() {
 
     // Turn off screen
     screen_off();
-    }
+  }
 
   // Set the user button to wake the board
   sleep_interrupt(BUTTON_PIN, LOW);
@@ -151,8 +151,6 @@ void sleep() {
 
 #endif
 }
-
-
 
 
 void callback(uint8_t message) {
@@ -191,7 +189,6 @@ void callback(uint8_t message) {
     screen_print("\n");
   }
 }
-
 
 
 void scanI2Cdevice(void)
@@ -241,6 +238,7 @@ void scanI2Cdevice(void)
     LDO2 200mA -> LORA
     LDO3 200mA -> GPS
  */
+
 void axp192Init() {
     if (axp192_found) {
         if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
@@ -304,11 +302,12 @@ void initDeepSleep() {
     Serial.printf("booted, wake cause %d (boot count %d)\n", wakeCause, bootCount);
 }
 
+
 void setup() {
   // Debug
-  #ifdef DEBUG_PORT
+#ifdef DEBUG_PORT
   DEBUG_PORT.begin(SERIAL_BAUD);
-  #endif
+#endif
 
   initDeepSleep();
 
@@ -319,6 +318,7 @@ void setup() {
 
   // Buttons & LED
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+
 #ifdef LED_PIN
   pinMode(LED_PIN, OUTPUT);
 #endif
@@ -327,11 +327,10 @@ void setup() {
   DEBUG_MSG(APP_NAME " " APP_VERSION "\n");
 
   // Don't init display if we don't have one or we are waking headless due to a timer event
-  if(wakeCause == ESP_SLEEP_WAKEUP_TIMER)
+  if (wakeCause == ESP_SLEEP_WAKEUP_TIMER)
     ssd1306_found = false; // forget we even have the hardware
 
-  if(ssd1306_found)
-    screen_setup();
+  if (ssd1306_found) screen_setup();
 
   // Init GPS
   gps_setup();
@@ -348,7 +347,7 @@ void setup() {
   if (!ttn_setup()) {
     screen_print("[ERR] Radio module not found!\n");
 
-    if(REQUIRE_RADIO) {
+    if (REQUIRE_RADIO) {
       delay(MESSAGE_TO_SLEEP_DELAY);
       screen_off();
       sleep_forever();
@@ -366,7 +365,7 @@ void loop() {
   ttn_loop();
   screen_loop();
 
-  if(packetSent) {
+  if (packetSent) {
     packetSent = false;
     sleep();
   }
@@ -374,13 +373,13 @@ void loop() {
   // if user presses button for more than 3 secs, discard our network prefs and reboot (FIXME, use a debounce lib instead of this boilerplate)
   static bool wasPressed = false;
   static uint32_t minPressMs; // what tick should we call this press long enough
-  if(!digitalRead(BUTTON_PIN)) {
-    if(!wasPressed) { // just started a new press
+  if (!digitalRead(BUTTON_PIN)) {
+    if (!wasPressed) { // just started a new press
       Serial.println("pressing");
       wasPressed = true;
       minPressMs = millis() + 3000;
     } 
-  } else if(wasPressed) {
+  } else if (wasPressed) {
     // we just did a release
     wasPressed = false;
     if(millis() > minPressMs) {
@@ -405,6 +404,7 @@ void loop() {
         screen_print("Waiting GPS lock\n");
         first = false;
       }
+
 #ifdef GPS_WAIT_FOR_LOCK
       if (millis() > GPS_WAIT_FOR_LOCK) {
         sleep();
