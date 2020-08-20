@@ -36,57 +36,110 @@ String baChStatus = "No charging";
 bool ssd1306_found = false;
 bool axp192_found = false;
 
-// Message counter, stored in RTC memory, survives deep sleep
-RTC_DATA_ATTR uint32_t count = 0;
+bool packetSent, packetQueued;
 
 #if defined(PAYLOAD_USE_FULL)
   // includes number of satellites and accuracy
-  uint8_t txBuffer[10];
+  static uint8_t txBuffer[10];
 #elif defined(PAYLOAD_USE_CAYENNE)
   // CAYENNE DF
   static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #endif
 
+// deep sleep support
+RTC_DATA_ATTR int bootCount = 0;
+esp_sleep_source_t wakeCause; // the reason we booted this time
+
 // -----------------------------------------------------------------------------
 // Application
 // -----------------------------------------------------------------------------
 
-void send() {
-  char buffer[40];
-  snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
-  screen_print(buffer);
-  snprintf(buffer, sizeof(buffer), "Longitude: %10.6f\n", gps_longitude());
-  screen_print(buffer);
-  snprintf(buffer, sizeof(buffer), "Error: %4.2fm\n", gps_hdop());
-  screen_print(buffer);
+void buildPacket(uint8_t txBuffer[]); // needed for platformio
 
-  buildPacket(txBuffer);
+/**
+ * If we have a valid position send it to the server.
+ * @return true if we decided to send.
+ */
+bool trySend() {
+  packetSent = false;
+  // We also wait for altitude being not exactly zero, because the GPS chip generates a bogus 0 alt report when first powered on
+  if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0 && gps_altitude() != 0)
+  {
+    char buffer[40];
+    snprintf(buffer, sizeof(buffer), "Latitude: %10.6f\n", gps_latitude());
+    screen_print(buffer);
+    snprintf(buffer, sizeof(buffer), "Longitude: %10.6f\n", gps_longitude());
+    screen_print(buffer);
+    snprintf(buffer, sizeof(buffer), "Error: %4.2fm\n", gps_hdop());
+    screen_print(buffer);
+
+    buildPacket(txBuffer);
 
 #if LORAWAN_CONFIRMED_EVERY > 0
-  bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
+    bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
 #else
-  bool confirmed = false;
+    bool confirmed = false;
 #endif
 
-  ttn_cnt(count);
-  ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
-
-  count++;
+    packetQueued = true;
+    ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
+    return true;
+  }
+  else {
+    return false;
+  }
 }
+
+
+void doDeepSleep(uint64_t msecToWake)
+{
+    Serial.printf("Entering deep sleep for %llu seconds\n", msecToWake / 1000);
+
+    // not using wifi yet, but once we are this is needed to shutoff the radio hw
+    // esp_wifi_stop();
+
+    screen_off(); // datasheet says this will draw only 10ua
+    LMIC_shutdown(); // cleanly shutdown the radio
+    
+    if(axp192_found) {
+        // turn on after initial testing with real hardware
+        axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF); // LORA radio
+        axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF); // GPS main power
+    }
+
+    // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
+    // until then we need the following lines
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+
+    // Only GPIOs which are have RTC functionality can be used in this bit map: 0,2,4,12-15,25-27,32-39.
+    uint64_t gpioMask = (1ULL << BUTTON_PIN);
+
+    // FIXME change polarity so we can wake on ANY_HIGH instead - that would allow us to use all three buttons (instead of just the first)
+    gpio_pullup_en((gpio_num_t) BUTTON_PIN);
+
+    esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
+
+    esp_sleep_enable_timer_wakeup(msecToWake * 1000ULL); // call expects usecs
+    esp_deep_sleep_start();                              // TBD mA sleep current (battery)
+}
+
 
 void sleep() {
 #if SLEEP_BETWEEN_MESSAGES
 
-  // Show the going to sleep message on the screen
-  char buffer[20];
-  snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
-  screen_print(buffer);
+  // If the user has a screen, tell them we are about to sleep
+  if(ssd1306_found) {
+    // Show the going to sleep message on the screen
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
+    screen_print(buffer);
 
-  // Wait for MESSAGE_TO_SLEEP_DELAY millis to sleep
-  delay(MESSAGE_TO_SLEEP_DELAY);
+    // Wait for MESSAGE_TO_SLEEP_DELAY millis to sleep
+    delay(MESSAGE_TO_SLEEP_DELAY);
 
-  // Turn off screen
-  screen_off();
+    // Turn off screen
+    screen_off();
+    }
 
   // Set the user button to wake the board
   sleep_interrupt(BUTTON_PIN, LOW);
@@ -94,14 +147,19 @@ void sleep() {
   // We sleep for the interval between messages minus the current millis
   // this way we distribute the messages evenly every SEND_INTERVAL millis
   uint32_t sleep_for = (millis() < SEND_INTERVAL) ? SEND_INTERVAL - millis() : SEND_INTERVAL;
-  sleep_millis(sleep_for);
+  doDeepSleep(sleep_for);
 
 #endif
 }
 
+
+
+
 void callback(uint8_t message) {
   if (EV_JOINING == message) screen_print("Joining TTN...\n");
-  if (EV_JOINED == message) screen_print("TTN joined!\n");
+  if (EV_JOINED == message) {
+    screen_print("TTN joined!\n");
+  }
   if (EV_JOIN_FAILED == message) screen_print("TTN join failed\n");
   if (EV_REJOIN_FAILED == message) screen_print("TTN rejoin failed\n");
   if (EV_RESET == message) screen_print("Reset TTN connection\n");
@@ -110,9 +168,11 @@ void callback(uint8_t message) {
   if (EV_PENDING == message) screen_print("Message discarded\n");
   if (EV_QUEUED == message) screen_print("Message queued\n");
 
-  if (EV_TXCOMPLETE == message) {
+  // We only want to say 'packetSent' for our packets (not packets needed for joining)
+  if (EV_TXCOMPLETE == message && packetQueued) {
     screen_print("Message sent\n");
-    sleep();
+    packetQueued = false;
+    packetSent = true;
   }
 
   if (EV_RESPONSE == message) {
@@ -132,9 +192,7 @@ void callback(uint8_t message) {
   }
 }
 
-uint32_t get_count() {
-  return count;
-}
+
 
 void scanI2Cdevice(void)
 {
@@ -172,79 +230,114 @@ void scanI2Cdevice(void)
         Serial.println("done\n");
 }
 
+/**
+ * Init the power manager chip
+ * 
+ * axp192 power 
+    DCDC1 0.7-3.5V @ 1200mA max -> OLED // If you turn this off you'll lose comms to the axp192 because the OLED and the axp192 share the same i2c bus, instead use ssd1306 sleep mode
+    DCDC2 -> unused
+    DCDC3 0.7-3.5V @ 700mA max -> ESP32 (keep this on!)
+    LDO1 30mA -> charges GPS backup battery // charges the tiny J13 battery by the GPS to power the GPS ram (for a couple of days), can not be turned off
+    LDO2 200mA -> LORA
+    LDO3 200mA -> GPS
+ */
+void axp192Init() {
+    if (axp192_found) {
+        if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
+            Serial.println("AXP192 Begin PASS");
+        } else {
+            Serial.println("AXP192 Begin FAIL");
+        }
+        // axp.setChgLEDMode(LED_BLINK_4HZ);
+        Serial.printf("DCDC1: %s\n", axp.isDCDC1Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("DCDC2: %s\n", axp.isDCDC2Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("LDO2: %s\n", axp.isLDO2Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("LDO3: %s\n", axp.isLDO3Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("DCDC3: %s\n", axp.isDCDC3Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("Exten: %s\n", axp.isExtenEnable() ? "ENABLE" : "DISABLE");
+        Serial.println("----------------------------------------");
+
+        axp.setPowerOutPut(AXP192_LDO2, AXP202_ON); // LORA radio
+        axp.setPowerOutPut(AXP192_LDO3, AXP202_ON); // GPS main power
+        axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
+        axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
+        axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
+        axp.setDCDC1Voltage(3300); // for the OLED power
+
+        Serial.printf("DCDC1: %s\n", axp.isDCDC1Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("DCDC2: %s\n", axp.isDCDC2Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("LDO2: %s\n", axp.isLDO2Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("LDO3: %s\n", axp.isLDO3Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("DCDC3: %s\n", axp.isDCDC3Enable() ? "ENABLE" : "DISABLE");
+        Serial.printf("Exten: %s\n", axp.isExtenEnable() ? "ENABLE" : "DISABLE");
+
+        pinMode(PMU_IRQ, INPUT_PULLUP);
+        attachInterrupt(PMU_IRQ, [] {
+            pmu_irq = true;
+        }, FALLING);
+
+        axp.adc1Enable(AXP202_BATT_CUR_ADC1, 1);
+        axp.enableIRQ(AXP202_VBUS_REMOVED_IRQ | AXP202_VBUS_CONNECT_IRQ | AXP202_BATT_REMOVED_IRQ | AXP202_BATT_CONNECT_IRQ, 1);
+        axp.clearIRQ();
+
+        if (axp.isChargeing()) {
+            baChStatus = "Charging";
+        }
+    } else {
+        Serial.println("AXP192 not found");
+    }
+}
+
+
+// Perform power on init that we do on each wake from deep sleep
+void initDeepSleep() {
+    bootCount++;
+    wakeCause = esp_sleep_get_wakeup_cause(); 
+    /* 
+    Not using yet because we are using wake on all buttons being low
+
+    wakeButtons = esp_sleep_get_ext1_wakeup_status();       // If one of these buttons is set it was the reason we woke
+    if (wakeCause == ESP_SLEEP_WAKEUP_EXT1 && !wakeButtons) // we must have been using the 'all buttons rule for waking' to support busted boards, assume button one was pressed
+        wakeButtons = ((uint64_t)1) << buttons.gpios[0];
+    */
+
+    Serial.printf("booted, wake cause %d (boot count %d)\n", wakeCause, bootCount);
+}
+
 void setup() {
   // Debug
   #ifdef DEBUG_PORT
   DEBUG_PORT.begin(SERIAL_BAUD);
   #endif
 
-  delay(1000);
+  initDeepSleep();
 
-  #ifdef T_BEAM_V10
   Wire.begin(I2C_SDA, I2C_SCL);
   scanI2Cdevice();
-  axp192_found = true;
-  if (axp192_found) {
-      if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
-          Serial.println("AXP192 Begin PASS");
-      } else {
-          Serial.println("AXP192 Begin FAIL");
-      }
-      // axp.setChgLEDMode(LED_BLINK_4HZ);
-      Serial.printf("DCDC1: %s\n", axp.isDCDC1Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("DCDC2: %s\n", axp.isDCDC2Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("LDO2: %s\n", axp.isLDO2Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("LDO3: %s\n", axp.isLDO3Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("DCDC3: %s\n", axp.isDCDC3Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("Exten: %s\n", axp.isExtenEnable() ? "ENABLE" : "DISABLE");
-      Serial.println("----------------------------------------");
 
-      axp.setPowerOutPut(AXP192_LDO2, AXP202_ON);
-      axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);
-      axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
-      axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
-      axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
-      axp.setDCDC1Voltage(3300);
-
-      Serial.printf("DCDC1: %s\n", axp.isDCDC1Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("DCDC2: %s\n", axp.isDCDC2Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("LDO2: %s\n", axp.isLDO2Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("LDO3: %s\n", axp.isLDO3Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("DCDC3: %s\n", axp.isDCDC3Enable() ? "ENABLE" : "DISABLE");
-      Serial.printf("Exten: %s\n", axp.isExtenEnable() ? "ENABLE" : "DISABLE");
-
-      pinMode(PMU_IRQ, INPUT_PULLUP);
-      attachInterrupt(PMU_IRQ, [] {
-          pmu_irq = true;
-      }, FALLING);
-
-      axp.adc1Enable(AXP202_BATT_CUR_ADC1, 1);
-      axp.enableIRQ(AXP202_VBUS_REMOVED_IRQ | AXP202_VBUS_CONNECT_IRQ | AXP202_BATT_REMOVED_IRQ | AXP202_BATT_CONNECT_IRQ, 1);
-      axp.clearIRQ();
-
-      if (axp.isChargeing()) {
-          baChStatus = "Charging";
-      }
-  } else {
-      Serial.println("AXP192 not found");
-  }
-  #endif
+  axp192Init();
 
   // Buttons & LED
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+#ifdef LED_PIN
   pinMode(LED_PIN, OUTPUT);
+#endif
 
   // Hello
   DEBUG_MSG(APP_NAME " " APP_VERSION "\n");
 
-  // Display
-  screen_setup();
+  // Don't init display if we don't have one or we are waking headless due to a timer event
+  if(wakeCause == ESP_SLEEP_WAKEUP_TIMER)
+    ssd1306_found = false; // forget we even have the hardware
+
+  if(ssd1306_found)
+    screen_setup();
 
   // Init GPS
   gps_setup();
 
-  // Show logo on first boot
-  if (0 == count) {
+  // Show logo on first boot after removing battery
+  if (bootCount == 0) {
     screen_print(APP_NAME " " APP_VERSION, 0, 0);
     screen_show_logo();
     screen_update();
@@ -254,17 +347,17 @@ void setup() {
   // TTN setup
   if (!ttn_setup()) {
     screen_print("[ERR] Radio module not found!\n");
-    delay(MESSAGE_TO_SLEEP_DELAY);
-    screen_off();
-    sleep_forever();
-  }
 
-  ttn_register(callback);
-  ttn_join();
-  ttn_sf(LORAWAN_SF);
-  ttn_adr(LORAWAN_ADR);
-  if(!LORAWAN_ADR){
-    LMIC_setLinkCheckMode(0); // Link check problematic if not using ADR. Must be set after join
+    if(REQUIRE_RADIO) {
+      delay(MESSAGE_TO_SLEEP_DELAY);
+      screen_off();
+      sleep_forever();
+    }
+  }
+  else {
+    ttn_register(callback);
+    ttn_join();
+    ttn_adr(LORAWAN_ADR);
   }
 }
 
@@ -273,23 +366,54 @@ void loop() {
   ttn_loop();
   screen_loop();
 
+  if(packetSent) {
+    packetSent = false;
+    sleep();
+  }
+
+  // if user presses button for more than 3 secs, discard our network prefs and reboot (FIXME, use a debounce lib instead of this boilerplate)
+  static bool wasPressed = false;
+  static uint32_t minPressMs; // what tick should we call this press long enough
+  if(!digitalRead(BUTTON_PIN)) {
+    if(!wasPressed) { // just started a new press
+      Serial.println("pressing");
+      wasPressed = true;
+      minPressMs = millis() + 3000;
+    } 
+  } else if(wasPressed) {
+    // we just did a release
+    wasPressed = false;
+    if(millis() > minPressMs) {
+      // held long enough
+      screen_print("Erasing prefs");
+      ttn_erase_prefs();
+      delay(5000); // Give some time to read the screen
+      ESP.restart();
+    }
+  }
+
   // Send every SEND_INTERVAL millis
   static uint32_t last = 0;
   static bool first = true;
   if (0 == last || millis() - last > SEND_INTERVAL) {
-    if (0 < gps_hdop() && gps_hdop() < 50 && gps_latitude() != 0 && gps_longitude() != 0) {
+    if (trySend()) {
       last = millis();
       first = false;
-      Serial.println("TRANSMITTING");
-      send();
+      Serial.println("TRANSMITTED");
     } else {
       if (first) {
         screen_print("Waiting GPS lock\n");
         first = false;
       }
+#ifdef GPS_WAIT_FOR_LOCK
       if (millis() > GPS_WAIT_FOR_LOCK) {
         sleep();
       }
+#endif
+
+      // No GPS lock yet, let the OS put the main CPU in low power mode for 100ms (or until another interrupt comes in)
+      // i.e. don't just keep spinning in loop as fast as we can.
+      delay(100);
     }
   }
 }

@@ -80,7 +80,7 @@ static void gps_loop() {
         Serial.println(t);
         sprintf(t, "Lng: %f", _gps.location.lng());
         Serial.println(t);
-        sprintf(t, "Alt: %f", altitudeGps);
+        sprintf(t, "Alt: %d", altitudeGps);
         Serial.println(t);
         sprintf(t, "Hdop: %d", hdopGps);
         Serial.println(t);
