@@ -26,12 +26,10 @@
 #include <TinyGPS++.h>
 #include <Wire.h>
 
-#ifdef T_BEAM_V10
 #include "axp20x.h"
 AXP20X_Class axp;
 bool pmu_irq = false;
 String baChStatus = "No charging";
-#endif
 
 bool ssd1306_found = false;
 bool axp192_found = false;
