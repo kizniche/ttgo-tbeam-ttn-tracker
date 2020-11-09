@@ -1,0 +1,30 @@
+#logContainer {
+  padding-top: 40px;
+}
+
+header {
+  position: fixed;
+  height: 40px;
+  vertical-align: middle;
+  box-shadow: 0 3px 11px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  top: 40px;
+  left: 0;
+  right: 0;
+  width: auto;
+  background-color: #fbfbfb;
+  padding: 0 10px;
+  z-index: 99;
+}
+
+a.action {
+  text-decoration: underline;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: normal;
+  font-size: 0.8em;
+  color: #828282;
+}

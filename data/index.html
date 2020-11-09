@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>T-Beam mapper configuration UI</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <script src="js/main.js"></script>
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0"
+    />
+
+    <template id="tplCheckbox">
+      <style>
+        /* Customize the label (the container) */
+        .container {
+          display: block;
+          position: relative;
+          padding-left: 35px;
+          margin-bottom: 12px;
+          cursor: pointer;
+          font-size: 22px;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 14px;
+          padding-top: 5px;
+          color: #000;
+        }
+
+        /* Hide the browser's default checkbox */
+        .container input {
+          position: absolute;
+          opacity: 0;
+          cursor: pointer;
+          height: 0;
+          width: 0;
+        }
+
+        /* Create a custom checkbox */
+        .checkmark {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 25px;
+          width: 25px;
+          background-color: #eee;
+        }
+
+        /* On mouse-over, add a grey background color */
+        .container:hover input ~ .checkmark {
+          background-color: #ccc;
+        }
+
+        /* When the checkbox is checked, add a blue background */
+        .container input:checked ~ .checkmark {
+          background-color: #0d83d1;
+        }
+
+        /* Create the checkmark/indicator (hidden when not checked) */
+        .checkmark:after {
+          content: "";
+          position: absolute;
+          display: none;
+        }
+
+        /* Show the checkmark when checked */
+        .container input:checked ~ .checkmark:after {
+          display: block;
+        }
+
+        /* Style the checkmark/indicator */
+        .container .checkmark:after {
+          left: 9px;
+          top: 5px;
+          width: 5px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 3px 3px 0;
+          -webkit-transform: rotate(45deg);
+          -ms-transform: rotate(45deg);
+          transform: rotate(45deg);
+        }
+      </style>
+      <label class="container"
+        ><slot name="label"></slot>
+        <input type="checkbox" />
+        <span class="checkmark"></span>
+      </label>
+    </template>
+
+    <template id="tplLogEntry">
+      <style>
+        /* Style sheet embedded to not load the .css file every time the shadow DOM is used */
+
+        pre.logEntry {
+          background: #fff;
+          margin: 0;
+          margin-bottom: 0.5em;
+          display: inline-block;
+          width: 100%;
+          position: relative;
+          border-radius: 5px;
+          padding: 8px 4px 8px 10px;
+          white-space: pre-line;
+          border-left-width: 5px;
+          border-left-style: solid;
+          border-left-color: #ccc;
+          box-sizing: border-box;
+        }
+      </style>
+      <pre class="logEntry"><slot name="content"></slot></pre>
+    </template>
+
+    <template id="tplCard">
+      <style>
+        /* Style sheet embedded to not load the .css file every time the shadow DOM is used */
+
+        div.card {
+          background: #fff;
+          margin: 0;
+          margin-bottom: 2em;
+          display: inline-block;
+          width: 100%;
+          position: relative;
+          border-radius: 5px;
+        }
+
+        div.card > header {
+          padding: 0.2em 0.67em;
+          white-space: nowrap;
+          vertical-align: middle;
+          text-transform: uppercase;
+          font-family: LeagueSpartan;
+          background: #fbfbfb;
+          height: 3rem;
+          line-height: 3rem;
+          border: 1px solid #ebebeb;
+          border-bottom: 2px solid #eee;
+          color: #0d83d1;
+          border-top-right-radius: 5px;
+          border-top-left-radius: 5px;
+          width: 100%;
+          box-sizing: border-box;
+          display: flex;
+          flex-flow: row;
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          align-items: center;
+        }
+
+        div.card > header > h1 {
+          font-size: 1.1em;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-top: 6px;
+          flex: 1;
+        }
+
+        div.card > header button {
+          border-style: solid;
+          border-color: #0d83d1;
+          border-width: 2px;
+          border-radius: 6px;
+          padding: 6px;
+          background-color: #0d83d1;
+          color: #ffffff;
+          font-weight: bold;
+          visibility: hidden;
+        }
+
+        div.card.unsavedChanges > header button {
+          visibility: visible;
+        }
+
+        div.card > main {
+          padding: 1em;
+          position: relative;
+          border: 1px solid #ebebeb;
+          border-top: none;
+          border-bottom-color: #dedede;
+          border-bottom-left-radius: 5px;
+          border-bottom-right-radius: 5px;
+        }
+      </style>
+      <div class="card" id="main">
+        <header>
+          <h1><slot name="title"></slot></h1>
+          <button id="btnCommit">Save changes</button>
+        </header>
+        <main>
+          <slot name="content"></slot>
+        </main>
+      </div>
+    </template>
+
+    <template id="tplCardLoraConfig">
+      <span slot="title">Lora Radio</span>
+      <span slot="content">
+        <form>
+          <ul>
+            <li>
+              <label for="spread">Spread factor</label>
+              <select name="spread" id="spread">
+                <option value="7">SF7</option>
+                <option value="8">SF8</option>
+                <option value="9">SF9</option>
+                <option value="10">SF10</option>
+                <option value="11">SF11</option>
+                <option value="12">SF2</option>
+              </select>
+            </li>
+            <li>
+              <label for="port">Port</label>
+              <select name="port" id="port">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </li>
+            <li>
+              <label for="adr">ADR</label>
+              <ui-checkbox id="adr" name="adr">
+                <span slot="label">enabled</span>
+              </ui-checkbox>
+            </li>
+            <li>
+              <label for="delay">Delay between messages</label>
+              <select name="delay" id="delay">
+                <option value="15000">15 Seconds</option>
+                <option value="30000">30 Seconds</option>
+                <option value="60000">1 Minute</option>
+                <option value="300000">5 Minutes</option>
+                <option value="600000">10 Minutes</option>
+                <option value="900000">15 Minutes</option>
+                <option value="1800000">30 Minutes</option>
+                <option value="3600000">1 Hour</option>
+              </select>
+            </li>
+          </ul>
+        </form>
+      </span>
+    </template>
+
+    <template id="tplLogContainer">
+      <link rel="stylesheet" href="css/logContainer.css" />
+      <div>
+        <header class="tools">
+          <a class="action">Clear log</a>
+        </header>
+        <div id="logContainer"></div>
+      </div>
+    </template>
+
+    <template id="tplMainStatus">
+      <ui-card>
+        <span slot="title">Hello World</span>
+        <span slot="content">This is some quality content</span>
+      </ui-card>
+    </template>
+
+    <template id="tplMainLog">
+      <ui-log></ui-log>
+    </template>
+
+    <template id="tplMainConfig">
+      <ui-card-lora> </ui-card-lora>
+      <ui-card>
+        <span slot="title">LoRaWAN setup</span>
+        <span slot="content"
+          >Setup of the activation mode and keys happens here</span
+        >
+      </ui-card>
+      <ui-card>
+        <span slot="title">Display</span>
+        <span slot="content">Display settings are to be found here</span>
+      </ui-card>
+      <ui-card>
+        <span slot="title">WiFi</span>
+        <span slot="content">Access point configuration is found here</span>
+      </ui-card>
+    </template>
+  </head>
+  <body>
+    <header>T-Beam TTN tracker <span class="version">v1.2.0</span></header>
+    <main id="content"></main>
+    <nav id="mainNav">
+      <ul>
+        <li class="selected left"><a href="#status">Device status</a></li>
+        <li><a href="#log">Log</a></li>
+        <li class="right"><a href="#config">Configuration</a></li>
+      </ul>
+    </nav>
+    <script>
+      nav(window.location.hash.substr(1));
+    </script>
+  </body>
+</html>

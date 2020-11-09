@@ -54,7 +54,6 @@ void ttn_register(void (*callback)(uint8_t message));
 // uncomment the next option and experiment with values (~ 1 - 5)
 //#define CLOCK_ERROR             5
 
-#define DEBUG_PORT Serial            // Serial debug port
 #define SERIAL_BAUD 115200           // Serial debug baud rate
 #define SLEEP_BETWEEN_MESSAGES false // Do sleep between messages
 #define SEND_INTERVAL (20 * 1000)    // Sleep for these many millis
@@ -68,16 +67,6 @@ void ttn_register(void (*callback)(uint8_t message));
 
 // If not defined, we will wait for lock forever
 #define GPS_WAIT_FOR_LOCK (60 * 1000) // Wait after every boot for GPS lock (may need longer than 5s because we turned the gps off during deep sleep)
-
-// -----------------------------------------------------------------------------
-// DEBUG
-// -----------------------------------------------------------------------------
-
-#ifdef DEBUG_PORT
-#define DEBUG_MSG(...) DEBUG_PORT.printf(__VA_ARGS__)
-#else
-#define DEBUG_MSG(...)
-#endif
 
 // -----------------------------------------------------------------------------
 // Custom messages
@@ -149,3 +138,18 @@ void ttn_register(void (*callback)(uint8_t message));
 #define GPS_POWER_CTRL_CH 3
 #define LORA_POWER_CTRL_CH 2
 #define PMU_IRQ 35
+
+// -----------------------------------------------------------------------------
+// WiFi options
+// -----------------------------------------------------------------------------
+
+// Enable WiFi by default?
+#define WIFI_ENABLED_BY_DEFAULT 1
+// The port the webserver should listen on
+#define WEBSERVER_PORT 80
+
+// -----------------------------------------------------------------------------
+// Logging
+// -----------------------------------------------------------------------------
+
+#define LOG_BUFFER_SIZE 100

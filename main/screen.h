@@ -1,8 +1,9 @@
 /*
 
-Sleep module
+SSD1306 - Screen module
 
 Copyright (C) 2018 by Xose Pérez <xose dot perez at gmail dot com>
+
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,26 +20,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include <esp_sleep.h>
+#include <Arduino.h>
 
-void sleep_interrupt(uint8_t gpio, uint8_t mode) {
-    esp_sleep_enable_ext0_wakeup((gpio_num_t) gpio, mode);
-}
+void _screen_header();
 
-void sleep_interrupt_mask(uint64_t mask, uint8_t mode) {
-    esp_sleep_enable_ext1_wakeup(mask, (esp_sleep_ext1_wakeup_mode_t) mode);
-}
+void screen_show_logo();
 
-void sleep_millis(uint64_t ms) {
-    esp_sleep_enable_timer_wakeup(ms * 1000);
-    esp_deep_sleep_start();
-}
+void screen_off();
 
-void sleep_seconds(uint32_t seconds) {
-    esp_sleep_enable_timer_wakeup(seconds * 1000000);
-    esp_deep_sleep_start();
-}
+void screen_on();
 
-void sleep_forever() {
-    esp_deep_sleep_start();
-}
+void screen_clear();
+
+void screen_print(const char *text, uint8_t x, uint8_t y, uint8_t alignment);
+
+void screen_print(const char *text, uint8_t x, uint8_t y);
+
+void screen_print(const char *text);
+
+void screen_update();
+
+void screen_setup();
+
+void screen_loop();
