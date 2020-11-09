@@ -22,11 +22,18 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
    * [ThingPulse/esp8266-oled-ssd1306](https://github.com/ThingPulse/esp8266-oled-ssd1306) (for Rev0 and Rev1)
    * [lewisxhe/AXP202X_Library](https://github.com/lewisxhe/AXP202X_Library) (for Rev1 only)
 
-3. Edit ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
+3. Edit ```platformio.ini``` and select the correct frequency for your region:
 
-4. Edit this project file ```main/configuration.h``` and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
+    * `CFG_eu868`
+    * `CFG_us915`
+    * `CFG_au915`
+    * `CFG_as923`
+    * `CFG_kr920`
+    * `CFG_in866`
 
-5. Edit this project file ```main/credentials.h``` to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
+4. Edit this project's `main/configuration.h` file and select your correct board revision, either T_BEAM_V07 or T_BEAM_V10 (see [T-BEAM Board Versions](#t-beam-board-versions) to determine which board revision you have).
+
+5. Edit this project's ```main/credentials.h``` file to use either ```USE_ABP``` or ```USE_OTAA``` and add the Keys/EUIs for your Application's Device from The Things Network.
 
 6. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself or use [TTN Tracker](#ttn-tracker), then add the Decoder code:
 
