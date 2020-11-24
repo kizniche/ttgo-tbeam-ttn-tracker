@@ -3,6 +3,7 @@
 TTGO T-BEAM Tracker for The Things Network
 
 Copyright (C) 2018 by Xose Pérez <xose dot perez at gmail dot com>
+Extended 2020 by Stefan Westphal <stefan at westphal dot dev>
 
 This code requires LMIC library by Matthijs Kooijman
 https://github.com/matthijskooijman/arduino-lmic
@@ -26,6 +27,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Arduino.h>
 #include <lmic.h>
+
+class DeviceConfig
+{
+public:
+    bool sleepBetweenMessages; // Should the controller sleep between messages
+    uint32_t sleepDelayMs;     // Time before going to sleep after a message has been sent
+
+    uint32_t sendIntervalMs; // Time between two messages
+
+    uint8_t loraPort;               // LoRaWAN port number to use when sending a message
+    uint16_t loraConfirmedEvery;    // Request a confirmed message every N messages
+    unsigned char loraSpreadFactor; // The SF to use for sending out messages
+    bool loraUseADR;                // Should ADR be used?
+
+    bool wifiEnabled; // Should the WiFi be enabled on startup?
+    String wifiSSID;  // The SSID to use for the SoftAP
+    String wifiPSK;   // The pre-shared-key for the SoftAP
+
+    DeviceConfig();
+
+    /**
+     * Reads the configuration from the nvs partition
+     */
+    void read();
+    /**
+     * Writes the current config to the nvs partition
+     */
+    void write();
+    /**
+     * Erases the config from the nvs partition
+     */
+    void reset();
+};
+
+extern DeviceConfig config;
+
 void ttn_register(void (*callback)(uint8_t message));
 
 // -----------------------------------------------------------------------------
@@ -54,19 +91,40 @@ void ttn_register(void (*callback)(uint8_t message));
 // uncomment the next option and experiment with values (~ 1 - 5)
 //#define CLOCK_ERROR             5
 
-#define SERIAL_BAUD 115200           // Serial debug baud rate
-#define SLEEP_BETWEEN_MESSAGES false // Do sleep between messages
-#define SEND_INTERVAL (20 * 1000)    // Sleep for these many millis
-#define MESSAGE_TO_SLEEP_DELAY 5000  // Time after message before going to sleep
-#define LOGO_DELAY 5000              // Time to show logo on first boot
-#define LORAWAN_PORT 10              // Port the messages will be sent to
-#define LORAWAN_CONFIRMED_EVERY 0    // Send confirmed message every these many messages (0 means never)
-#define LORAWAN_SF DR_SF7            // Spreading factor (recommended DR_SF7 for ttn network map purposes, DR_SF10 works for slow moving trackers)
-#define LORAWAN_ADR 0                // Enable ADR
-#define REQUIRE_RADIO true           // If true, we will fail to start if the radio is not found
+#define SERIAL_BAUD 115200 // Serial debug baud rate
+#define LOGO_DELAY 5000    // Time to show logo on first boot
+#define REQUIRE_RADIO true // If true, we will fail to start if the radio is not found
 
 // If not defined, we will wait for lock forever
 #define GPS_WAIT_FOR_LOCK (60 * 1000) // Wait after every boot for GPS lock (may need longer than 5s because we turned the gps off during deep sleep)
+
+// -----------------------------------------------------------------------------
+// Default configuration
+//
+// These values will be used when there is no configuration saved in the NVM
+// storage (or when the config is being reset).
+// -----------------------------------------------------------------------------
+
+// -- Lora config --------------------------------------------------------------
+
+#define SEND_INTERVAL (20 * 1000) // Sleep for these many millis
+#define LORAWAN_PORT 10           // Port the messages will be sent to
+#define LORAWAN_CONFIRMED_EVERY 0 // Send confirmed message every these many messages (0 means never)
+#define LORAWAN_SF DR_SF7         // Spreading factor (recommended DR_SF7 for ttn network map purposes, DR_SF10 works for slow moving trackers)
+#define LORAWAN_ADR 0             // Enable ADR
+
+// -- Device config ------------------------------------------------------------
+
+#define SLEEP_BETWEEN_MESSAGES false // Do sleep between messages
+#define MESSAGE_TO_SLEEP_DELAY 5000  // Time after message before going to sleep
+
+// -- Web and WiFi config ------------------------------------------------------
+
+#define WIFI_ENABLED 1            // Enable WiFi?
+#define WIFI_SSID "T-Beam Mapper" // Default SSID for the AP
+#define WIFI_PSK "changeme"       // Default pre-shared-key for the AP
+
+#define WEBSERVER_PORT 80 // The port the webserver should listen on
 
 // -----------------------------------------------------------------------------
 // Custom messages
@@ -138,15 +196,6 @@ void ttn_register(void (*callback)(uint8_t message));
 #define GPS_POWER_CTRL_CH 3
 #define LORA_POWER_CTRL_CH 2
 #define PMU_IRQ 35
-
-// -----------------------------------------------------------------------------
-// WiFi options
-// -----------------------------------------------------------------------------
-
-// Enable WiFi by default?
-#define WIFI_ENABLED_BY_DEFAULT 1
-// The port the webserver should listen on
-#define WEBSERVER_PORT 80
 
 // -----------------------------------------------------------------------------
 // Logging

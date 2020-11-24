@@ -43,3 +43,5 @@ void screen_update();
 void screen_setup();
 
 void screen_loop();
+
+void screen_invert();

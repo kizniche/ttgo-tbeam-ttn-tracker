@@ -6,6 +6,9 @@
 
   Copyright (C) 2018 by Xose Pérez <xose dot perez at gmail dot com>
 
+  Extended by Stefan Westphal <stefan at westphal dot dev> to support web
+  configuration
+
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -85,14 +88,10 @@ bool trySend()
 
     buildPacket(txBuffer);
 
-#if LORAWAN_CONFIRMED_EVERY > 0
-    bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
-#else
-    bool confirmed = false;
-#endif
+    bool confirmed = config.loraConfirmedEvery > 0 ? (ttn_get_count() % config.loraConfirmedEvery == 0) : false;
 
     packetQueued = true;
-    ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
+    ttn_send(txBuffer, sizeof(txBuffer), config.loraPort, confirmed);
     return true;
   }
   else
@@ -136,32 +135,32 @@ void doDeepSleep(uint64_t msecToWake)
 
 void sleep()
 {
-#if SLEEP_BETWEEN_MESSAGES
-
-  // If the user has a screen, tell them we are about to sleep
-  if (ssd1306_found)
+  if (config.sleepBetweenMessages)
   {
-    // Show the going to sleep message on the screen
-    char buffer[20];
-    snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (MESSAGE_TO_SLEEP_DELAY / 1000.0));
-    screen_print(buffer);
 
-    // Wait for MESSAGE_TO_SLEEP_DELAY millis to sleep
-    delay(MESSAGE_TO_SLEEP_DELAY);
+    // If the user has a screen, tell them we are about to sleep
+    if (ssd1306_found)
+    {
+      // Show the going to sleep message on the screen
+      char buffer[20];
+      snprintf(buffer, sizeof(buffer), "Sleeping in %3.1fs\n", (config.sleepDelayMs / 1000.0));
+      screen_print(buffer);
 
-    // Turn off screen
-    screen_off();
+      // Wait for config.sleepDelayMs millis to sleep
+      delay(config.sleepDelayMs);
+
+      // Turn off screen
+      screen_off();
+    }
+
+    // Set the user button to wake the board
+    sleep_interrupt(BUTTON_PIN, LOW);
+
+    // We sleep for the interval between messages minus the current millis
+    // this way we distribute the messages evenly every config.sendIntervalMs millis
+    uint32_t sleep_for = (millis() < config.sendIntervalMs) ? config.sendIntervalMs - millis() : config.sendIntervalMs;
+    doDeepSleep(sleep_for);
   }
-
-  // Set the user button to wake the board
-  sleep_interrupt(BUTTON_PIN, LOW);
-
-  // We sleep for the interval between messages minus the current millis
-  // this way we distribute the messages evenly every SEND_INTERVAL millis
-  uint32_t sleep_for = (millis() < SEND_INTERVAL) ? SEND_INTERVAL - millis() : SEND_INTERVAL;
-  doDeepSleep(sleep_for);
-
-#endif
 }
 
 void callback(uint8_t message)
@@ -346,15 +345,14 @@ void initDeepSleep()
 
 void setup()
 {
-  // Debug
-#ifdef DEBUG_PORT
-  DEBUG_PORT.begin(SERIAL_BAUD);
-#endif
-
-  SPIFFS.begin();
-
+  Serial.begin(SERIAL_BAUD);
   // Make sure that the log buffer is initialized
   clearLog();
+
+  // Read the configuration from the nvs partition
+  config.read();
+
+  SPIFFS.begin();
 
   initDeepSleep();
 
@@ -381,7 +379,7 @@ void setup()
     screen_setup();
 
 // Access point setup
-#ifdef WIFI_ENABLED_BY_DEFAULT
+#ifdef WIFI_ENABLED
   wifiSetup();
 #endif
 
@@ -404,7 +402,7 @@ void setup()
 
     if (REQUIRE_RADIO)
     {
-      delay(MESSAGE_TO_SLEEP_DELAY);
+      delay(config.sleepDelayMs);
       screen_off();
       sleep_forever();
     }
@@ -413,7 +411,7 @@ void setup()
   {
     ttn_register(callback);
     ttn_join();
-    ttn_adr(LORAWAN_ADR);
+    ttn_adr(config.loraUseADR);
   }
 }
 
@@ -430,24 +428,32 @@ void loop()
   }
 
   // if user presses button for more than 3 secs, discard our network prefs and reboot (FIXME, use a debounce lib instead of this boilerplate)
-  static bool wasPressed = false;
-  static uint32_t minPressMs; // what tick should we call this press long enough
-  if (!digitalRead(BUTTON_PIN))
+  // for everything under 3 secs, toggle the wifi AP mode
+  if (digitalRead(BUTTON_PIN) == LOW)
   {
-    if (!wasPressed)
-    { // just started a new press
-      log("pressing");
-      wasPressed = true;
-      minPressMs = millis() + 3000;
-    }
-  }
-  else if (wasPressed)
-  {
-    // we just did a release
-    wasPressed = false;
-    if (millis() > minPressMs)
+    log("Select button pressed");
+    ostime_t startTime = os_getTime();
+    while (digitalRead(BUTTON_PIN) == LOW)
     {
-      // held long enough
+      // Wait...
+    }
+
+    auto msSpent = (osticks2ms(os_getTime() - startTime));
+    log("Button released after" + String(msSpent, DEC) + "ms");
+    if (msSpent < 3000)
+    {
+      if (wifiEnabled())
+      {
+        wifiShutdown();
+      }
+      else
+      {
+        wifiSetup();
+      }
+    }
+    else
+    {
+      // Discard the network prefs and reboot now
       screen_print("Erasing prefs");
       ttn_erase_prefs();
       delay(5000); // Give some time to read the screen
@@ -455,10 +461,10 @@ void loop()
     }
   }
 
-  // Send every SEND_INTERVAL millis
+  // Send every config.sendIntervalMs millis
   static uint32_t last = 0;
   static bool first = true;
-  if (0 == last || millis() - last > SEND_INTERVAL)
+  if (0 == last || millis() - last > config.sendIntervalMs)
   {
     if (trySend())
     {

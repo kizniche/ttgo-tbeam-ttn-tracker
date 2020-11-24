@@ -151,6 +151,15 @@ void screen_setup()
     display->setLogBuffer(5, 30);
 }
 
+void screen_invert()
+{
+    if (!display)
+    {
+        return;
+    }
+    display->invertDisplay();
+}
+
 void screen_loop()
 {
     if (!display)
@@ -167,11 +176,11 @@ void screen_loop()
         }
         else
         {
-            baChStatus = "No Charging";
+            baChStatus = "Not Charging";
         }
         if (axp.isVbusRemoveIRQ())
         {
-            baChStatus = "No Charging";
+            baChStatus = "Not Charging";
         }
         log(baChStatus); //Prints charging status to screen
         digitalWrite(2, !digitalRead(2));

@@ -51,6 +51,11 @@ void wifiSetup();
  */
 void wifiShutdown();
 
+/**
+ * Returns if the WiFi mode is currently enabled
+ */
+bool wifiEnabled();
+
 //-- SSE handling ------------------------------------------------------------------------------------------------------
 
 /**

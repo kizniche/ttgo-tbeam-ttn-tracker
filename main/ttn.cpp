@@ -97,7 +97,7 @@ void forceTxSingleChannelDr()
 #endif
 
     // Set data rate (SF) and transmit power for uplink
-    ttn_sf(LORAWAN_SF);
+    ttn_sf(config.loraSpreadFactor);
 }
 
 // DevEUI generator using devices's MAC address - from https://github.com/cyberman54/ESP32-Paxcounter/blob/master/src/lorawan.cpp
@@ -341,7 +341,7 @@ void ttn_join()
     forceTxSingleChannelDr();
 #else
     // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-    ttn_sf(LORAWAN_SF);
+    ttn_sf(config.loraSpreadFactor);
 #endif
 
 #if defined(USE_ABP)
