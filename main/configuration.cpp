@@ -66,16 +66,6 @@ void DeviceConfig::read()
     wifiEnabled = p.getBool("wifiEnabled", WIFI_ENABLED);
     wifiSSID = p.getString("wifiSSID", WIFI_SSID);
     wifiPSK = p.getString("wifiPSK", WIFI_PSK);
-    log("SleepBetweenMessages: " + String(sleepBetweenMessages, DEC));
-    log("sleepDelayMs: " + String(sleepDelayMs, DEC));
-    log("sendIntervalMs: " + String(sendIntervalMs, DEC));
-    log("loraPort: " + String(loraPort, DEC));
-    log("loraConfirmedEvery: " + String(loraConfirmedEvery, DEC));
-    log("loraSpreadFactor: " + String(loraSpreadFactor, DEC));
-    log("loraUseADR: " + String(loraUseADR, DEC));
-    log("wifiEnabled: " + String(wifiEnabled, DEC));
-    log("wifiSSID: " + wifiSSID);
-    log("wifiPSK: " + wifiPSK);
 
     p.end();
     log("Config read done...");
@@ -86,16 +76,7 @@ void DeviceConfig::write()
     Preferences p;
     log("Writing configuration...");
     p.begin(CONFIG_NAMESPACE);
-    log("SleepBetweenMessages: " + String(sleepBetweenMessages, DEC));
-    log("sleepDelayMs: " + String(sleepDelayMs, DEC));
-    log("sendIntervalMs: " + String(sendIntervalMs, DEC));
-    log("loraPort: " + String(loraPort, DEC));
-    log("loraConfirmedEvery: " + String(loraConfirmedEvery, DEC));
-    log("loraSpreadFactor: " + String(loraSpreadFactor, DEC));
-    log("loraUseADR: " + String(loraUseADR, DEC));
-    log("wifiEnabled: " + String(wifiEnabled, DEC));
-    log("wifiSSID: " + wifiSSID);
-    log("wifiPSK: " + wifiPSK);
+
     p.putBool("sleep", sleepBetweenMessages);
     p.putULong("sleepDelay", sleepDelayMs);
     p.putULong("sendInterval", sendIntervalMs);

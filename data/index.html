@@ -85,7 +85,7 @@
       </style>
       <label class="container"
         ><slot name="label"></slot>
-        <input type="checkbox" />
+        <input type="checkbox" id="check" />
         <span class="checkmark"></span>
       </label>
     </template>
@@ -160,22 +160,6 @@
           flex: 1;
         }
 
-        div.card > header button {
-          border-style: solid;
-          border-color: #0d83d1;
-          border-width: 2px;
-          border-radius: 6px;
-          padding: 6px;
-          background-color: #0d83d1;
-          color: #ffffff;
-          font-weight: bold;
-          visibility: hidden;
-        }
-
-        div.card.unsavedChanges > header button {
-          visibility: visible;
-        }
-
         div.card > main {
           padding: 1em;
           position: relative;
@@ -189,7 +173,6 @@
       <div class="card" id="main">
         <header>
           <h1><slot name="title"></slot></h1>
-          <button id="btnCommit">Save changes</button>
         </header>
         <main>
           <slot name="content"></slot>
@@ -197,59 +180,237 @@
       </div>
     </template>
 
-    <template id="tplCardLoraConfig">
-      <span slot="title">Lora Radio</span>
-      <span slot="content">
-        <form>
-          <ul>
-            <li>
-              <label for="spread">Spread factor</label>
-              <select name="spread" id="spread">
-                <option value="7">SF7</option>
-                <option value="8">SF8</option>
-                <option value="9">SF9</option>
-                <option value="10">SF10</option>
-                <option value="11">SF11</option>
-                <option value="12">SF2</option>
-              </select>
-            </li>
-            <li>
-              <label for="port">Port</label>
-              <select name="port" id="port">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-              </select>
-            </li>
-            <li>
-              <label for="adr">ADR</label>
-              <ui-checkbox id="adr" name="adr">
-                <span slot="label">enabled</span>
-              </ui-checkbox>
-            </li>
-            <li>
-              <label for="delay">Delay between messages</label>
-              <select name="delay" id="delay">
-                <option value="15000">15 Seconds</option>
-                <option value="30000">30 Seconds</option>
-                <option value="60000">1 Minute</option>
-                <option value="300000">5 Minutes</option>
-                <option value="600000">10 Minutes</option>
-                <option value="900000">15 Minutes</option>
-                <option value="1800000">30 Minutes</option>
-                <option value="3600000">1 Hour</option>
-              </select>
-            </li>
-          </ul>
-        </form>
-      </span>
+    <template id="tplDialog">
+      <style>
+
+        div.backdrop {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background:rgba(0, 0, 0, 0.6);
+          z-index: 50;
+          padding: 16px;
+        }
+
+        dialog {
+          position: relative;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          margin: 0;
+          padding: 0;
+          display: block;
+          min-width: 200px;
+          border-radius: 5px;
+          border: none;
+        }
+
+        dialog > header {
+          padding: 0.2em 0.67em;
+          white-space: nowrap;
+          vertical-align: middle;
+          text-transform: uppercase;
+          font-family: LeagueSpartan;
+          background: #fbfbfb;
+          height: 3rem;
+          line-height: 3rem;
+          border: 1px solid #ebebeb;
+          border-bottom: 2px solid #eee;
+          color: #0d83d1;
+          border-top-right-radius: 5px;
+          border-top-left-radius: 5px;
+          width: 100%;
+          box-sizing: border-box;
+          display: flex;
+          flex-flow: row;
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          align-items: center;
+        }
+
+        dialog > header > h1 {
+          font-size: 1.1em;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-top: 6px;
+          flex: 1;
+        }
+
+        dialog > main {
+          padding: .8em;
+          position: relative;
+          border: none;
+        }
+
+        dialog > menu {
+          padding: 8px;
+          text-align: right;
+        }
+
+        dialog.error {
+          background-color: #ffeeee;
+        }
+
+        dialog.error > header {
+          background-color: #a54141;
+          color: #eee;
+          border-color: #a71c1c;
+        }
+
+        dialog.error > main {
+          color: rgb(128, 34, 34);
+        }
+
+        dialog.info > header {
+          background-color: #0d83d1;
+          border-color: #0d83d1;
+          color: #eee;
+        }
+
+        dialog.warn {
+          background-color: #fffdee;
+        }
+
+        dialog.warn > header {
+          background-color: #bbb819;
+          color: #eee;
+          border-color: #bbb819;
+        }
+
+        dialog.warn > main {
+          color: rgb(128, 122, 34);
+        }
+      </style>
+      <div class="backdrop">
+        <dialog open>
+        <header>
+          <h1><slot name="title"></slot></h1>
+        </header>
+        <main>
+          <slot name="content"></slot>
+        </main>
+        <menu>
+          <slot name="actions"></slot>
+        </menu>
+      </dialog>
+      </div>
+    </template>
+
+    <template id="tplConfigUi">
+      <ui-card>
+        <span slot="title">System</span>
+        <span slot="content">
+          <form>
+              <li>
+                <label for="interval"
+                  >Send message<br />
+                  every</label
+                >
+                <select name="interval" id="interval">
+                  <option value="15000">15 Seconds</option>
+                  <option value="30000">30 Seconds</option>
+                  <option value="60000">1 Minute</option>
+                  <option value="300000">5 Minutes</option>
+                  <option value="600000">10 Minutes</option>
+                  <option value="900000">15 Minutes</option>
+                  <option value="1800000">30 Minutes</option>
+                  <option value="3600000">1 Hour</option>
+                </select>
+              </li>
+              <li>
+                <label for="sleepBetweenMessages">Sleep after<br>each message?</label>
+                <ui-checkbox
+                  id="sleepBetweenMessages"
+                  name="sleepBetweenMessages"
+                >
+                </ui-checkbox>
+              </li>
+              <li>
+                <label for="sleepDelay"
+                  >Sleep delay<br />
+                  after message</label
+                >
+                <select name="sleepDelay" id="sleepDelay">
+                  <option value="100">100 Milliseconds</option>
+                  <option value="500">500 Milliseconds</option>
+                  <option value="1000">1 Second</option>
+                  <option value="5000">5 Seconds</option>
+                  <option value="10000">10 Seconds</option>
+                  <option value="15000">15 Seconds</option>
+                  <option value="30000">30 Seconds</option>
+                  <option value="60000">1 Minute</option>
+                </select>
+              </li>
+            </ul>
+          </form>
+        </span>
+      </ui-card>
+      <ui-card>
+        <span slot="title">LoRaWAN radio</span>
+        <span slot="content">
+          <form>
+            <ul>
+              <li>
+                <label for="sf">Spread factor</label>
+                <select name="sf" id="sf">
+                  <option value="5">SF7</option>
+                  <option value="4">SF8</option>
+                  <option value="3">SF9</option>
+                  <option value="2">SF10</option>
+                  <option value="1">SF11</option>
+                  <option value="0">SF12</option>
+                </select>
+              </li>
+              <li>
+                <label for="port">Port</label>
+                <select name="port" id="port">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </li>
+              <li>
+                <label for="adr">ADR</label>
+                <ui-checkbox id="adr" name="adr">
+                  <span slot="label">enabled</span>
+                </ui-checkbox>
+              </li>
+              <li>
+                <label for="confirmedEvery">Request confirm<br>every X messages</label>
+                <input type="number" min="0" max="100" name="confirmedEvery" id="confirmedEvery">
+              </li>
+            </ul>
+          </form>
+        </span>
+      </ui-card>
+      <ui-card>
+        <span slot="title">WiFi</span>
+        <span slot="content">
+          <form>
+            <ul>
+              <li>
+                <label for="ssid">SSID</label>
+                <input type="text" name="ssid" id="ssid" maxlength="32">
+              </li>
+              <li>
+                <label for="psk">Password</label>
+                <input type="text" name="psk" id="psk" maxlength="63">
+              </li>
+            </ul>
+          </form>
+        </span>
+      </ui-card>
     </template>
 
     <template id="tplLogContainer">
@@ -262,43 +423,27 @@
       </div>
     </template>
 
-    <template id="tplMainStatus">
-      <ui-card>
-        <span slot="title">Hello World</span>
-        <span slot="content">This is some quality content</span>
-      </ui-card>
-    </template>
-
     <template id="tplMainLog">
       <ui-log></ui-log>
     </template>
 
     <template id="tplMainConfig">
-      <ui-card-lora> </ui-card-lora>
-      <ui-card>
-        <span slot="title">LoRaWAN setup</span>
-        <span slot="content"
-          >Setup of the activation mode and keys happens here</span
-        >
-      </ui-card>
-      <ui-card>
-        <span slot="title">Display</span>
-        <span slot="content">Display settings are to be found here</span>
-      </ui-card>
-      <ui-card>
-        <span slot="title">WiFi</span>
-        <span slot="content">Access point configuration is found here</span>
-      </ui-card>
+      <ui-config></ui-config>
     </template>
   </head>
   <body>
-    <header>T-Beam TTN tracker <span class="version">v1.2.0</span></header>
+    <header>
+      <h1>T-Beam TTN tracker</h1>
+      <span class="version">v1.2.0</span>
+      <span class="actions">
+        <button id="btnSave">Save changes</button>
+      </span>
+    </header>
     <main id="content"></main>
     <nav id="mainNav">
       <ul>
-        <li class="selected left"><a href="#status">Device status</a></li>
-        <li><a href="#log">Log</a></li>
         <li class="right"><a href="#config">Configuration</a></li>
+        <li><a href="#log">Log</a></li>
       </ul>
     </nav>
     <script>

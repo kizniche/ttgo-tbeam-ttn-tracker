@@ -20,8 +20,6 @@ header {
   width: 100%;
   background-color: #fff;
   height: 40px;
-  font-family: LeagueSpartan;
-  font-size: 1.2em;
   vertical-align: middle;
   color: #0d83d0;
   font-weight: bold;
@@ -30,15 +28,48 @@ header {
   flex-flow: row;
   flex-wrap: nowrap;
   justify-content: flex-start;
-  align-items: center;
-  padding-left: 0.67em;
+  align-items: baseline;
   z-index: 100;
+}
+
+header h1 {
+  font-family: LeagueSpartan;
+  display: inline-block;
+  font-size: 1.2em;
+  margin-left: 8px;
 }
 
 header .version {
   color: #a1a1a1;
   font-size: 0.6em;
   margin-left: 3px;
+}
+
+header span.actions {
+  flex: 1;
+  text-align: right;
+  padding: 0 4px;
+  align-self: center;
+}
+
+button {
+  border-style: solid;
+  border-color: #0d83d1;
+  border-width: 2px;
+  border-radius: 6px;
+  padding: 6px;
+  background-color: #0d83d1;
+  color: #ffffff;
+  font-weight: bold;
+  min-width: 80px;
+}
+
+#btnSave {
+  visibility: hidden;
+}
+
+#btnSave.active {
+  visibility: visible;
 }
 
 main {
@@ -54,7 +85,7 @@ nav {
   padding: 4px;
   box-shadow: 0 -3px 11px rgba(0, 0, 0, 0.05);
   font-size: 0;
-  z-index: 100;
+  z-index: 40;
 }
 
 nav ul {
@@ -124,10 +155,10 @@ form li {
 }
 
 form li label {
-  min-width: 200px;
+  min-width: 150px;
 }
 
-form li select {
+select {
   flex: 1;
   padding: 8px;
   border-style: solid;
@@ -138,7 +169,53 @@ form li select {
   color: #000;
 }
 
+input {
+  background: #fdfdfd;
+  border: 2px solid #eee;
+  border-radius: 6px;
+  outline: none;
+  padding-left: 0.8em;
+  font-size: inherit;
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
+
+input:focus {
+  border-color: #0d83d1;
+}
+
 ui-checkbox {
   width: 25px;
   height: 25px;
+}
+
+ui-dialog[data-type="error"] button {
+  background-color: #a71c1c;
+  border-color: #a71c1c;
+}
+
+ui-dialog[data-type="warn"] button {
+  background-color: #bbb819;
+  border-color: #bbb819;
+}
+
+ui-dialog button {
+  margin-right: 8px;
+}
+
+ui-dialog button:last-child {
+  margin-right: 0;
+}
+
+ui-dialog pre {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+ui-dialog[data-type="error"] pre {
+  background-color: rgba(173, 22, 22, 0.1);
 }
