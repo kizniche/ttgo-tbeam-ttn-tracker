@@ -213,6 +213,11 @@ ui-dialog button:last-child {
 ui-dialog pre {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 4px;
+  line-break: normal;
+  word-wrap: normal;
+  white-space: pre-wrap;
+  overflow: scroll;
+  max-width: calc(100vw - 30px);
   border-radius: 4px;
 }
 

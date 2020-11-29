@@ -299,8 +299,9 @@ void handleWriteConfig(AsyncWebServerRequest *request, JsonVariant &json)
     {
         screen_print("Config saved.\nRestarting...");
         // We cannot use delay here, so we're doing the waiting ourselves.
+        // Just to make sure that the user sees on the display what we're doing
         ostime_t startTime = os_getTime();
-        while ((os_getTime() - startTime < ms2osticks(200)))
+        while ((os_getTime() - startTime < ms2osticks(1000)))
         {
             // Idle
         }

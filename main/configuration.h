@@ -70,7 +70,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define APP_NAME "TTN MAP-TRACK"
-#define APP_VERSION "1.2.0"
+#define APP_VERSION "2.0.0"
 
 // -----------------------------------------------------------------------------
 // Configuration
@@ -107,7 +107,7 @@ void ttn_register(void (*callback)(uint8_t message));
 
 // -- Lora config --------------------------------------------------------------
 
-#define SEND_INTERVAL (20 * 1000) // Sleep for these many millis
+#define SEND_INTERVAL (15 * 1000) // Sleep for these many millis
 #define LORAWAN_PORT 10           // Port the messages will be sent to
 #define LORAWAN_CONFIRMED_EVERY 0 // Send confirmed message every these many messages (0 means never)
 #define LORAWAN_SF DR_SF7         // Spreading factor (recommended DR_SF7 for ttn network map purposes, DR_SF10 works for slow moving trackers)

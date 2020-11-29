@@ -378,10 +378,11 @@ void setup()
   if (ssd1306_found)
     screen_setup();
 
-// Access point setup
-#ifdef WIFI_ENABLED
-  wifiSetup();
-#endif
+  // Access point setup
+  if (config.wifiEnabled)
+  {
+    wifiSetup();
+  }
 
   // Init GPS
   gps_setup();
