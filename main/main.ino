@@ -74,7 +74,8 @@ bool trySend() {
     buildPacket(txBuffer);
 
 #if LORAWAN_CONFIRMED_EVERY > 0
-    bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
+    bool confirmed = (ttn_get_count() % LORAWAN_CONFIRMED_EVERY == 0);
+    if (confirmed){ Serial.println("confirmation enabled"); }
 #else
     bool confirmed = false;
 #endif
