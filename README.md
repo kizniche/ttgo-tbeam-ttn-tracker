@@ -1,6 +1,6 @@
 ## TTGO T-Beam Tracker for The Things Network
 
-Current version: 1.2.0
+Current version: 1.2.1
 
 Uploads GPS data from the TTGO T-Beam to [The Things Network](https://www.thethingsnetwork.org) (TTN) and [TTN Mapper](https://ttnmapper.org) for tracking and determining signal strength of LoRaWAN gateways and nodes.
 
