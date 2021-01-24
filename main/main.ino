@@ -74,7 +74,8 @@ bool trySend() {
     buildPacket(txBuffer);
 
 #if LORAWAN_CONFIRMED_EVERY > 0
-    bool confirmed = (count % LORAWAN_CONFIRMED_EVERY == 0);
+    bool confirmed = (ttn_get_count() % LORAWAN_CONFIRMED_EVERY == 0);
+    if (confirmed){ Serial.println("confirmation enabled"); }
 #else
     bool confirmed = false;
 #endif
@@ -152,9 +153,16 @@ void sleep() {
 
 
 void callback(uint8_t message) {
-  if (EV_JOINING == message) screen_print("Joining TTN...\n");
+  bool ttn_joined = false;
   if (EV_JOINED == message) {
-    screen_print("TTN joined!\n");
+    ttn_joined = true;
+  }
+  if (EV_JOINING == message) {
+    if (ttn_joined) {
+      screen_print("TTN joining...\n");
+    } else {
+      screen_print("Joined TTN!\n");
+    }
   }
   if (EV_JOIN_FAILED == message) screen_print("TTN join failed\n");
   if (EV_REJOIN_FAILED == message) screen_print("TTN rejoin failed\n");
@@ -334,12 +342,17 @@ void setup() {
   gps_setup();
 
   // Show logo on first boot after removing battery
+
+#ifndef ALWAYS_SHOW_LOGO 
   if (bootCount == 0) {
+#endif
     screen_print(APP_NAME " " APP_VERSION, 0, 0);
     screen_show_logo();
     screen_update();
     delay(LOGO_DELAY);
-  }
+ #ifndef ALWAYS_SHOW_LOGO
+ }
+#endif
 
   // TTN setup
   if (!ttn_setup()) {
@@ -382,10 +395,15 @@ void loop() {
     wasPressed = false;
     if(millis() > minPressMs) {
       // held long enough
-      screen_print("Erasing prefs");
+#ifndef PREFS_DISCARD
+      screen_print("Discarding prefs disabled\n");
+#endif 
+#ifdef PREFS_DISCARD
+      screen_print("Discarding prefs!\n");
       ttn_erase_prefs();
       delay(5000); // Give some time to read the screen
       ESP.restart();
+#endif
     }
   }
 

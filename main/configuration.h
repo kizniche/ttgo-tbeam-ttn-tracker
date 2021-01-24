@@ -33,15 +33,15 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define APP_NAME                "TTN MAP-TRACK"
-#define APP_VERSION             "1.2.0"
+#define APP_VERSION             "1.2.1"
 
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
 
 // Select which T-Beam board is being used. Only uncomment one.
-// #define T_BEAM_V07  // AKA Rev0 (first board released)
-#define T_BEAM_V10  // AKA Rev1 (second board released)
+#define T_BEAM_V07  // AKA Rev0 (first board released)
+// #define T_BEAM_V10  // AKA Rev1 (second board released)
 
 // Select the payload format. Change on TTN as well. Only uncomment one.
 #define PAYLOAD_USE_FULL
@@ -49,6 +49,12 @@ void ttn_register(void (*callback)(uint8_t message));
 
 // If using a single-channel gateway, uncomment this next option and set to your gateway's channel
 //#define SINGLE_CHANNEL_GATEWAY  0
+
+//Uncomment if you always want to see the boot logo at boot time
+#define ALWAYS_SHOW_LOGO
+
+//Uncomment to enable discarding network settings by long pressing second button
+//#define PREFS_DISCARD
 
 // If you are having difficulty sending messages to TTN after the first successful send,
 // uncomment the next option and experiment with values (~ 1 - 5)
