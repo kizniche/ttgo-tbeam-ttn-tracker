@@ -48,18 +48,18 @@ const lmic_pinmap lmic_pins = {
 static RTC_DATA_ATTR uint32_t count = 0;
 
 #ifdef USE_ABP
-// These callbacks are only used in over-the-air activation, so they are
-// left empty here (we cannot leave them out completely unless
-// DISABLE_JOIN is set in config.h, otherwise the linker will complain).
-void os_getArtEui (u1_t* buf) { }
-void os_getDevEui (u1_t* buf) { }
-void os_getDevKey (u1_t* buf) { }
+    // These callbacks are only used in over-the-air activation, so they are
+    // left empty here (we cannot leave them out completely unless
+    // DISABLE_JOIN is set in config.h, otherwise the linker will complain).
+    void os_getArtEui (u1_t* buf) { }
+    void os_getDevEui (u1_t* buf) { }
+    void os_getDevKey (u1_t* buf) { }
 #endif
 
 #ifdef USE_OTAA
-void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
-void os_getDevEui (u1_t* buf) { memcpy(buf, DEVEUI, 8); }
-void os_getDevKey (u1_t* buf) { memcpy_P(buf, APPKEY, 16); }
+    void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
+    void os_getDevEui (u1_t* buf) { memcpy(buf, DEVEUI, 8); }
+    void os_getDevKey (u1_t* buf) { memcpy_P(buf, APPKEY, 16); }
 #endif
 
 std::vector<void(*)(uint8_t message)> _lmic_callbacks;
@@ -79,11 +79,11 @@ void forceTxSingleChannelDr() {
     // This only affects uplinks; for downlinks the default
     // channels or the configuration from the OTAA Join Accept are used.
     #ifdef SINGLE_CHANNEL_GATEWAY
-    for(int i=0; i<9; i++) { // For EU; for US use i<71
-        if(i != SINGLE_CHANNEL_GATEWAY) {
-            LMIC_disableChannel(i);
+        for(int i=0; i<9; i++) { // For EU; for US use i<71
+            if(i != SINGLE_CHANNEL_GATEWAY) {
+                LMIC_disableChannel(i);
+            }
         }
-    }
     #endif
 
     // Set data rate (SF) and transmit power for uplink
@@ -117,23 +117,23 @@ static void printHex2(unsigned v) {
 }
 
 #ifdef USE_OTAA
-// generate DevEUI from macaddr if needed
-void initDevEUI() {
-    bool needInit = true;
-    for(int i = 0; i < sizeof(DEVEUI); i++)
-        if(DEVEUI[i]) needInit = false;
+    // generate DevEUI from macaddr if needed
+    void initDevEUI() {
+        bool needInit = true;
+        for(int i = 0; i < sizeof(DEVEUI); i++)
+            if(DEVEUI[i]) needInit = false;
 
-    if(needInit)
-        gen_lora_deveui(DEVEUI);
+        if(needInit)
+            gen_lora_deveui(DEVEUI);
 
-    Serial.print("DevEUI: ");
-    for(int i = 0; i < sizeof(DEVEUI); i++) {
-        if (i != 0)
-                Serial.print("-");
-        printHex2(DEVEUI[i]);
+        Serial.print("DevEUI: ");
+        for(int i = 0; i < sizeof(DEVEUI); i++) {
+            if (i != 0)
+                    Serial.print("-");
+            printHex2(DEVEUI[i]);
+        }
+        Serial.println();
     }
-    Serial.println();
-}
 #endif
 
 // LMIC library will call this method when an event is fired
@@ -141,7 +141,7 @@ void onEvent(ev_t event) {
     switch(event) {
     case EV_JOINED: {
         #ifdef SINGLE_CHANNEL_GATEWAY
-        forceTxSingleChannelDr();
+            forceTxSingleChannelDr();
         #endif
 
         // Disable link check validation (automatically enabled
@@ -256,48 +256,48 @@ void ttn_join() {
     LMIC_reset();
 
     #ifdef CLOCK_ERROR
-    LMIC_setClockError(MAX_CLOCK_ERROR * CLOCK_ERROR / 100);
+        LMIC_setClockError(MAX_CLOCK_ERROR * CLOCK_ERROR / 100);
     #endif
 
-        #if defined(CFG_eu868)
+    #if defined(CFG_eu868)
 
-            // Set up the channels used by the Things Network, which corresponds
-            // to the defaults of most gateways. Without this, only three base
-            // channels from the LoRaWAN specification are used, which certainly
-            // works, so it is good for debugging, but can overload those
-            // frequencies, so be sure to configure the full frequency range of
-            // your network here (unless your network autoconfigures them).
-            // Setting up channels should happen after LMIC_setSession, as that
-            // configures the minimal channel set.
-            LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
-            LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-            LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
+        // Set up the channels used by the Things Network, which corresponds
+        // to the defaults of most gateways. Without this, only three base
+        // channels from the LoRaWAN specification are used, which certainly
+        // works, so it is good for debugging, but can overload those
+        // frequencies, so be sure to configure the full frequency range of
+        // your network here (unless your network autoconfigures them).
+        // Setting up channels should happen after LMIC_setSession, as that
+        // configures the minimal channel set.
+        LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
+        LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+        LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
 
-        #elif defined(CFG_us915)
+    #elif defined(CFG_us915)
 
-            // NA-US channels 0-71 are configured automatically
-            // but only one group of 8 should (a subband) should be active
-            // TTN recommends the second sub band, 1 in a zero based count.
-            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
-            // in the US, with TTN, it saves join time if we start on subband 1
-            // (channels 8-15). This will get overridden after the join by
-            // parameters from the network. If working with other networks or in
-            // other regions, this will need to be changed.
-            LMIC_selectSubBand(1);
+        // NA-US channels 0-71 are configured automatically
+        // but only one group of 8 should (a subband) should be active
+        // TTN recommends the second sub band, 1 in a zero based count.
+        // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+        // in the US, with TTN, it saves join time if we start on subband 1
+        // (channels 8-15). This will get overridden after the join by
+        // parameters from the network. If working with other networks or in
+        // other regions, this will need to be changed.
+        LMIC_selectSubBand(1);
 
-        #elif defined(CFG_au915)
+    #elif defined(CFG_au915)
 
-            // set sub band for AU915
-            // https://github.com/TheThingsNetwork/gateway-conf/blob/master/AU-global_conf.json
-            LMIC_selectSubBand(1);
-        
-        #endif
+        // set sub band for AU915
+        // https://github.com/TheThingsNetwork/gateway-conf/blob/master/AU-global_conf.json
+        LMIC_selectSubBand(1);
+
+    #endif
 
         // TTN defines an additional channel at 869.525Mhz using SF9 for class B
         // devices' ping slots. LMIC does not have an easy way to define set this
@@ -308,10 +308,10 @@ void ttn_join() {
         LMIC_setLinkCheckMode(0);
 
         #ifdef SINGLE_CHANNEL_GATEWAY
-        forceTxSingleChannelDr();
+            forceTxSingleChannelDr();
         #else
-        // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-        ttn_sf(LORAWAN_SF);
+            // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
+            ttn_sf(LORAWAN_SF);
         #endif
 
     #if defined(USE_ABP)
@@ -337,9 +337,9 @@ void ttn_join() {
         LMIC_startJoining();
 
         #ifdef SINGLE_CHANNEL_GATEWAY
-        // LMiC will already have decided to send on one of the 3 default
-        // channels; ensure it uses the one we want
-        LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
+            // LMiC will already have decided to send on one of the 3 default
+            // channels; ensure it uses the one we want
+            LMIC.txChnl = SINGLE_CHANNEL_GATEWAY;
         #endif
 
         Preferences p;
