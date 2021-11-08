@@ -40,8 +40,9 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 // Select which T-Beam board is being used. Only uncomment one.
-#define T_BEAM_V07  // AKA Rev0 (first board released)
+// #define T_BEAM_V07  // AKA Rev0 (first board released)
 // #define T_BEAM_V10  // AKA Rev1 (second board released)
+#define T_BEAM_V11 // AKA Rev1.1
 
 // Select the payload format. Change on TTN as well. Only uncomment one.
 #define PAYLOAD_USE_FULL
@@ -104,7 +105,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #if defined(T_BEAM_V07)
 #define LED_PIN         14
 #define BUTTON_PIN      39
-#elif defined(T_BEAM_V10)
+#elif defined(T_BEAM_V10) || defined(T_BEAM_V11)
 #define BUTTON_PIN      38
 #endif
 
@@ -125,7 +126,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #if defined(T_BEAM_V07)
 #define GPS_RX_PIN      12
 #define GPS_TX_PIN      15
-#elif defined(T_BEAM_V10)
+#elif defined(T_BEAM_V10) || defined(T_BEAM_V11)
 #define GPS_RX_PIN      34
 #define GPS_TX_PIN      12
 #endif
