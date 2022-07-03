@@ -375,7 +375,7 @@ void ttn_sf(unsigned char sf) {
 
 void ttn_adr(bool enabled) {
     LMIC_setAdrMode(enabled);
-    LMIC_setLinkCheckMode(!enabled);
+    LMIC_setLinkCheckMode(enabled);
 }
 
 uint32_t ttn_get_count() {
