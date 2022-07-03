@@ -33,7 +33,7 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define APP_NAME                "TTN MAP-TRACK"
-#define APP_VERSION             "1.2.1"
+#define APP_VERSION             "1.2.2"
 
 // -----------------------------------------------------------------------------
 // Configuration
@@ -54,6 +54,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #define ALWAYS_SHOW_LOGO
 
 //Uncomment to enable discarding network settings by long pressing second button
+//Used for resetting frame counter, required to be done for migrating TTN v2 -> v3 (or switching applications on TTN)
 //#define PREFS_DISCARD
 
 // If you are having difficulty sending messages to TTN after the first successful send,

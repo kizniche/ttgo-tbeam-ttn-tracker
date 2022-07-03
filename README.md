@@ -1,6 +1,6 @@
 ## TTGO T-Beam Tracker for The Things Network
 
-Current version: 1.2.1
+Current version: 1.2.2
 
 Uploads GPS data from the TTGO T-Beam to [The Things Network](https://www.thethingsnetwork.org) (TTN) and [TTN Mapper](https://ttnmapper.org) for tracking and determining signal strength of LoRaWAN gateways and nodes.
 
@@ -12,6 +12,8 @@ It uses a RFM95 by HopeRF and the MCCI LoRaWAN LMIC stack. This sample code is c
 NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and a newer version (Rev1). The GPS module on Rev1 is connected to different pins than Rev0. This code has been successfully tested on REV0, and is in the process of being tested on REV1. See the end of this README for photos of eah board.
 
 ### Setup
+
+The preferred method to install this library is via [PlatformIO](https://platformio.org/install), however the original instructions for installing with the Arduino IDE are below but YMMV.
 
 1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'T-Beam'.
 
