@@ -282,7 +282,7 @@ void axp192Init() {
         axp.enableIRQ(AXP202_VBUS_REMOVED_IRQ | AXP202_VBUS_CONNECT_IRQ | AXP202_BATT_REMOVED_IRQ | AXP202_BATT_CONNECT_IRQ, 1);
         axp.clearIRQ();
 
-        if (axp.isChargeing()) {
+        if (axp.isCharging()) {
             baChStatus = "Charging";
         }
     } else {
