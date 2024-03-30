@@ -33,7 +33,9 @@ The preferred method to install this library is via [PlatformIO](https://platfor
 6. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself or use [TTN Tracker](#ttn-tracker), then add the Decoder code:
 
 ```C
-function Decoder(bytes, port) {
+function decodeUplink(input) {
+    var bytes=input.bytes;
+    
     var decoded = {};
 
     decoded.latitude = ((bytes[0]<<16)>>>0) + ((bytes[1]<<8)>>>0) + bytes[2];
@@ -49,8 +51,12 @@ function Decoder(bytes, port) {
 
     decoded.hdop = bytes[8] / 10.0;
     decoded.sats = bytes[9];
-
-    return decoded;
+    
+  return {
+    data: decoded,
+    warnings: [],
+    errors: []
+  };
 }
 ```
 
