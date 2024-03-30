@@ -53,9 +53,7 @@ function decodeUplink(input) {
     decoded.sats = bytes[9];
     
   return {
-    data: decoded,
-    warnings: [],
-    errors: []
+    data: decoded
   };
 }
 ```
