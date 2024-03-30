@@ -34,7 +34,7 @@ The preferred method to install this library is via [PlatformIO](https://platfor
 
 ```C
 function decodeUplink(input) {
-    var bytes=input.bytes;
+    var bytes = input.bytes;
     
     var decoded = {};
 
