@@ -15,6 +15,8 @@ NOTE: There are now 2 versions of the TTGO T-BEAM, the first version (Rev0) and 
 
 The preferred method to install this library is via [PlatformIO](https://platformio.org/install), however the original instructions for installing with the Arduino IDE are below but YMMV.
 
+**platformIO** users can ignore step 1 - 3, and have to set their region and radio type in ```platformio.ini```.
+
 1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'T-Beam'.
 
 2. Install the Arduino IDE libraries:
